@@ -15,7 +15,19 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-seedDatabase();
+// Schema + seed run once per instance; every request waits for the database to
+// be ready, so a cold start never serves a half-migrated database.
+let databaseError = null;
+const databaseReady = seedDatabase().catch((err) => {
+  databaseError = err;
+  console.error('[affilink] database init failed', err);
+});
+
+app.use(async (req, res, next) => {
+  await databaseReady;
+  if (databaseError) return next(databaseError);
+  next();
+});
 
 app.disable('x-powered-by');
 app.set('trust proxy', true);
@@ -25,12 +37,14 @@ app.use(express.urlencoded({ extended: false, limit: '200kb' }));
 // Creator-owned affiliate links: tracks the click, then hands the visitor to
 // the creator's own affiliate URL. Affilink never rewrites or injects tracking.
 app.get('/go/:slug', (req, res, next) => {
-  const slug = /^[a-z0-9-]{1,90}$/.test(req.params.slug) ? req.params.slug : null;
-  const offer = slug ? one('SELECT id, destination_url FROM creator_offers WHERE slug = ? AND is_active = 1', slug) : null;
-  if (!offer || !/^https?:\/\//i.test(offer.destination_url)) return next();
-  run('UPDATE creator_offers SET clicks = clicks + 1 WHERE id = ?', offer.id);
-  res.set('Cache-Control', 'no-store');
-  res.redirect(302, offer.destination_url);
+  (async () => {
+    const slug = /^[a-z0-9-]{1,90}$/.test(req.params.slug) ? req.params.slug : null;
+    const offer = slug ? await one('SELECT id, destination_url FROM creator_offers WHERE slug = ? AND is_active = 1', slug) : null;
+    if (!offer || !/^https?:\/\//i.test(offer.destination_url)) return next();
+    await run('UPDATE creator_offers SET clicks = clicks + 1 WHERE id = ?', offer.id);
+    res.set('Cache-Control', 'no-store');
+    res.redirect(302, offer.destination_url);
+  })().catch(next);
 });
 
 app.use((req, res, next) => {
@@ -70,8 +84,8 @@ app.use('/api/brand', brandRoutes);
 app.use('/api/admin', adminRoutes);
 app.get('/healthz', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
 
-const siteContent = () => {
-  const rows = many('SELECT key, value FROM site_content');
+const siteContent = async () => {
+  const rows = await many('SELECT key, value FROM site_content');
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
 };
 
@@ -188,8 +202,9 @@ app.get('/programs', (req, res) =>
   })
 );
 app.get('/programs/:slug', (req, res, next) => {
+  (async () => {
   const program = req.params.slug.match(/^[a-z0-9-]{1,80}$/)
-    ? one(
+    ? await one(
         `SELECT p.*, c.name AS category_name FROM affiliate_programs p LEFT JOIN categories c ON c.id = p.category_id
           WHERE p.slug = ?`,
         req.params.slug
@@ -212,6 +227,7 @@ app.get('/programs/:slug', (req, res, next) => {
     extraHead,
     bodyClass: 'page-program-details',
   });
+  })().catch(next);
 });
 app.get('/categories', (req, res) =>
   renderPage(res, 'categories.html', {
@@ -278,10 +294,11 @@ app.get('/admin', requirePage(['admin']), (req, res) =>
   renderPage(res, 'admin-dashboard.html', { title: 'Admin', canonical: '/admin', robots: 'noindex, nofollow' })
 );
 
-app.get('/sitemap.xml', (req, res) => {
+app.get('/sitemap.xml', (req, res, next) => {
+  (async () => {
   const siteUrl = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
   const statics = ['/', '/programs', '/categories', '/for-brands', '/resources', '/about', '/contact', '/privacy', '/terms', '/login', '/register'];
-  const programs = many(`SELECT slug, updated_at FROM affiliate_programs WHERE status = 'approved' ORDER BY updated_at DESC`);
+  const programs = await many(`SELECT slug, updated_at FROM affiliate_programs WHERE status = 'approved' ORDER BY updated_at DESC`);
   const urls = [
     ...statics.map((p) => ({ loc: `${siteUrl}${p}`, lastmod: new Date().toISOString().slice(0, 10), priority: p === '/' ? '1.0' : '0.7' })),
     ...programs.map((p) => ({ loc: `${siteUrl}/programs/${p.slug}`, lastmod: String(p.updated_at).slice(0, 10), priority: '0.8' })),
@@ -291,6 +308,7 @@ app.get('/sitemap.xml', (req, res) => {
 ${urls.map((u) => `  <url><loc>${u.loc}</loc><lastmod>${u.lastmod}</lastmod><changefreq>weekly</changefreq><priority>${u.priority}</priority></url>`).join('\n')}
 </urlset>`;
   res.type('application/xml').send(xml);
+  })().catch(next);
 });
 
 app.get('/robots.txt', (req, res) => {

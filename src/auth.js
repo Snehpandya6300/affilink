@@ -35,11 +35,11 @@ export function clearSessionCookie(req, res) {
   res.clearCookie(SESSION_COOKIE, cookieOptions(req));
 }
 
-export function createSession(req, res, userId) {
+export async function createSession(req, res, userId) {
   const token = randomToken(32);
   const created = new Date();
   const expires = new Date(created.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  run(
+  await run(
     'INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?,?,?,?)',
     token,
     userId,
@@ -50,37 +50,41 @@ export function createSession(req, res, userId) {
   return token;
 }
 
-export function destroySession(req, res) {
+export async function destroySession(req, res) {
   const token = parseCookies(req)[SESSION_COOKIE];
-  if (token) run('DELETE FROM sessions WHERE token = ?', token);
+  if (token) await run('DELETE FROM sessions WHERE token = ?', token);
   clearSessionCookie(req, res);
 }
 
 /** Attaches req.user (or null) from the session cookie. Safe for every request. */
-export function attachUser(req, res, next) {
-  req.user = null;
-  const token = parseCookies(req)[SESSION_COOKIE];
-  if (token) {
-    const row = one(
-      `SELECT u.id, u.email, u.name, u.role, u.status, u.avatar_url, s.expires_at
-         FROM sessions s JOIN users u ON u.id = s.user_id
-        WHERE s.token = ?`,
-      token
-    );
-    if (row && new Date(row.expires_at).getTime() > Date.now() && row.status === 'active') {
-      req.user = {
-        id: row.id,
-        email: row.email,
-        name: row.name,
-        role: row.role,
-        avatarUrl: row.avatar_url,
-      };
-    } else if (row) {
-      run('DELETE FROM sessions WHERE token = ?', token);
-      clearSessionCookie(req, res);
+export async function attachUser(req, res, next) {
+  try {
+    req.user = null;
+    const token = parseCookies(req)[SESSION_COOKIE];
+    if (token) {
+      const row = await one(
+        `SELECT u.id, u.email, u.name, u.role, u.status, u.avatar_url, s.expires_at
+           FROM sessions s JOIN users u ON u.id = s.user_id
+          WHERE s.token = ?`,
+        token
+      );
+      if (row && new Date(row.expires_at).getTime() > Date.now() && row.status === 'active') {
+        req.user = {
+          id: row.id,
+          email: row.email,
+          name: row.name,
+          role: row.role,
+          avatarUrl: row.avatar_url,
+        };
+      } else if (row) {
+        await run('DELETE FROM sessions WHERE token = ?', token);
+        clearSessionCookie(req, res);
+      }
     }
+    next();
+  } catch (err) {
+    next(err);
   }
-  next();
 }
 
 export function requireAuth(...roles) {
@@ -109,8 +113,8 @@ export function checkOrigin(req, res, next) {
   next();
 }
 
-export function attemptLogin(email, password) {
-  const user = one('SELECT * FROM users WHERE lower(email) = lower(?)', String(email || '').trim());
+export async function attemptLogin(email, password) {
+  const user = await one('SELECT * FROM users WHERE lower(email) = lower(?)', String(email || '').trim());
   if (!user || !verifyPassword(password, user.password_hash)) return { error: 'Incorrect email or password.' };
   if (user.status !== 'active') return { error: 'This account has been suspended. Contact support.' };
   return { user };

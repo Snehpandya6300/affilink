@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { one, run, nowIso } from '../db.js';
+import { one, insert, run, nowIso } from '../db.js';
 import { attemptLogin, createSession, destroySession, requireAuth } from '../auth.js';
 import {
   EMAIL_RE,
@@ -15,6 +15,8 @@ const attempts = new Map();
 const WINDOW = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 10;
 
+const wrap = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
+
 function rateLimited(key) {
   const now = Date.now();
   const entry = attempts.get(key);
@@ -26,11 +28,11 @@ function rateLimited(key) {
   return entry.count > MAX_ATTEMPTS;
 }
 
-function publicUser(user) {
+async function publicUser(user) {
   if (!user) return null;
   const base = { id: user.id, name: user.name, email: user.email, role: user.role, avatarUrl: user.avatar_url || null };
   if (user.role === 'brand') {
-    const profile = one(`SELECT company_name, website, logo_url, country, about, contact_email FROM brand_profiles WHERE user_id = ?`, user.id);
+    const profile = await one(`SELECT company_name, website, logo_url, country, about, contact_email FROM brand_profiles WHERE user_id = ?`, user.id);
     base.brandProfile = profile
       ? {
           companyName: profile.company_name,
@@ -43,18 +45,18 @@ function publicUser(user) {
       : null;
   }
   if (user.role === 'creator') {
-    base.creatorProfile = one(`SELECT niche, audience_size, country FROM creator_profiles WHERE user_id = ?`, user.id) || null;
+    base.creatorProfile = (await one(`SELECT niche, audience_size, country FROM creator_profiles WHERE user_id = ?`, user.id)) || null;
   }
   return base;
 }
 
-router.get('/me', (req, res) => {
+router.get('/me', wrap(async (req, res) => {
   if (!req.user) return res.json({ user: null });
-  const user = one('SELECT * FROM users WHERE id = ?', req.user.id);
-  res.json({ user: publicUser(user), demoAccounts: undefined });
-});
+  const user = await one('SELECT * FROM users WHERE id = ?', req.user.id);
+  res.json({ user: await publicUser(user), demoAccounts: undefined });
+}));
 
-router.post('/register', (req, res) => {
+router.post('/register', wrap(async (req, res) => {
   const body = req.body || {};
   const name = cleanString(body.name, 80);
   const email = cleanString(body.email, 160).toLowerCase();
@@ -69,12 +71,12 @@ router.post('/register', (req, res) => {
   if (pwProblem) fields.password = pwProblem;
   if (role === 'brand' && companyName.length < 2) fields.companyName = 'Enter your company name.';
   if (Object.keys(fields).length) return res.status(400).json({ error: 'Please fix the highlighted fields.', fields });
-  if (one('SELECT id FROM users WHERE lower(email) = ?', email)) {
+  if (await one('SELECT id FROM users WHERE lower(email) = ?', email)) {
     return res.status(409).json({ error: 'An account with that email already exists.', fields: { email: 'Email already registered.' } });
   }
 
   const now = nowIso();
-  const { lastInsertRowid: userId } = run(
+  const userId = await insert(
     `INSERT INTO users (email, password_hash, name, role, status, created_at, updated_at) VALUES (?,?,?,?,?,?,?)`,
     email,
     hashPassword(password),
@@ -85,13 +87,13 @@ router.post('/register', (req, res) => {
     now
   );
   if (role === 'creator') {
-    run(
+    await run(
       `INSERT INTO creator_profiles (user_id, promo_methods, updated_at) VALUES (?, '[]', ?)`,
       userId,
       now
     );
   } else {
-    run(
+    await run(
       `INSERT INTO brand_profiles (user_id, company_name, contact_email, updated_at) VALUES (?,?,?,?)`,
       userId,
       companyName,
@@ -99,39 +101,39 @@ router.post('/register', (req, res) => {
       now
     );
   }
-  createSession(req, res, userId);
-  const user = one('SELECT * FROM users WHERE id = ?', userId);
-  res.status(201).json({ user: publicUser(user), redirect: role === 'brand' ? '/brand/dashboard' : '/dashboard' });
-});
+  await createSession(req, res, userId);
+  const user = await one('SELECT * FROM users WHERE id = ?', userId);
+  res.status(201).json({ user: await publicUser(user), redirect: role === 'brand' ? '/brand/dashboard' : '/dashboard' });
+}));
 
-router.post('/login', (req, res) => {
+router.post('/login', wrap(async (req, res) => {
   const email = cleanString(req.body?.email, 160).toLowerCase();
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
   if (rateLimited(`${req.ip}:${email}`)) {
     return res.status(429).json({ error: 'Too many attempts. Please wait a few minutes and try again.' });
   }
-  const result = attemptLogin(email, password);
+  const result = await attemptLogin(email, password);
   if (result.error) return res.status(401).json({ error: result.error });
   attempts.delete(`${req.ip}:${email}`);
-  createSession(req, res, result.user.id);
+  await createSession(req, res, result.user.id);
   const redirect = result.user.role === 'admin' ? '/admin' : result.user.role === 'brand' ? '/brand/dashboard' : '/dashboard';
-  res.json({ user: publicUser(result.user), redirect });
-});
+  res.json({ user: await publicUser(result.user), redirect });
+}));
 
-router.post('/logout', (req, res) => {
-  destroySession(req, res);
+router.post('/logout', wrap(async (req, res) => {
+  await destroySession(req, res);
   res.json({ ok: true });
-});
+}));
 
-router.post('/forgot-password', (req, res) => {
+router.post('/forgot-password', wrap(async (req, res) => {
   const email = cleanString(req.body?.email, 160).toLowerCase();
   if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Enter a valid email address.', fields: { email: 'Enter a valid email address.' } });
-  const user = one('SELECT id FROM users WHERE lower(email) = ?', email);
+  const user = await one('SELECT id FROM users WHERE lower(email) = ?', email);
   const response = { message: 'If an account exists for that email, a reset link has been generated.' };
   if (user) {
     const token = randomToken(24);
-    run(
+    await run(
       `INSERT INTO password_resets (token, user_id, expires_at, used_at, created_at) VALUES (?,?,?,NULL,?)`,
       token,
       user.id,
@@ -143,38 +145,38 @@ router.post('/forgot-password', (req, res) => {
     response.demoNotice = 'Demo mode: email delivery is disabled, use the link below.';
   }
   res.json(response);
-});
+}));
 
-router.post('/reset-password', (req, res) => {
+router.post('/reset-password', wrap(async (req, res) => {
   const token = cleanString(req.body?.token, 120);
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
   const problem = passwordProblem(password);
   if (!token) return res.status(400).json({ error: 'Reset token is missing.' });
   if (problem) return res.status(400).json({ error: problem, fields: { password: problem } });
-  const row = one('SELECT * FROM password_resets WHERE token = ?', token);
+  const row = await one('SELECT * FROM password_resets WHERE token = ?', token);
   if (!row || row.used_at || new Date(row.expires_at).getTime() < Date.now()) {
     return res.status(400).json({ error: 'This reset link is invalid or has expired.' });
   }
-  run('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?', hashPassword(password), nowIso(), row.user_id);
-  run('UPDATE password_resets SET used_at = ? WHERE token = ?', nowIso(), token);
-  run('DELETE FROM sessions WHERE user_id = ?', row.user_id);
+  await run('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?', hashPassword(password), nowIso(), row.user_id);
+  await run('UPDATE password_resets SET used_at = ? WHERE token = ?', nowIso(), token);
+  await run('DELETE FROM sessions WHERE user_id = ?', row.user_id);
   res.json({ message: 'Password updated. You can sign in now.', redirect: '/login' });
-});
+}));
 
-router.post('/change-password', requireAuth(), (req, res) => {
+router.post('/change-password', requireAuth(), wrap(async (req, res) => {
   const current = typeof req.body?.currentPassword === 'string' ? req.body.currentPassword : '';
   const next = typeof req.body?.newPassword === 'string' ? req.body.newPassword : '';
-  const user = one('SELECT * FROM users WHERE id = ?', req.user.id);
+  const user = await one('SELECT * FROM users WHERE id = ?', req.user.id);
   if (!verifyPassword(current, user.password_hash)) {
     return res.status(400).json({ error: 'Current password is incorrect.', fields: { currentPassword: 'Incorrect password.' } });
   }
   const problem = passwordProblem(next);
   if (problem) return res.status(400).json({ error: problem, fields: { newPassword: problem } });
-  run('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?', hashPassword(next), nowIso(), user.id);
-  run('DELETE FROM sessions WHERE user_id = ?', user.id);
-  createSession(req, res, user.id);
+  await run('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?', hashPassword(next), nowIso(), user.id);
+  await run('DELETE FROM sessions WHERE user_id = ?', user.id);
+  await createSession(req, res, user.id);
   res.json({ message: 'Password updated.' });
-});
+}));
 
 export { publicUser };
 export default router;

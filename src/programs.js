@@ -23,11 +23,11 @@ export function serializeProgram(row, extra = {}) {
     websiteUrl: row.website_url,
     signupUrl: row.signup_url,
     commissionType: row.commission_type,
-    commissionValue: row.commission_value,
+    commissionValue: Number(row.commission_value),
     commissionLabel: row.commission_label,
     commissionTiers: json(row.commission_tiers),
     cookieDays: row.cookie_days,
-    minPayout: row.min_payout,
+    minPayout: Number(row.min_payout),
     currency: row.currency,
     paymentFrequency: row.payment_frequency,
     paymentMethods: json(row.payment_methods),
@@ -68,7 +68,7 @@ const SORTS = {
   oldest: 'p.created_at ASC',
   commission: 'p.commission_value DESC, p.created_at DESC',
   popularity: '(p.view_count + p.click_count * 4 + p.save_count * 6) DESC',
-  alpha: 'p.brand_name COLLATE NOCASE ASC',
+  alpha: 'LOWER(p.brand_name) ASC',
 };
 
 export function buildProgramQuery(filters = {}) {
@@ -127,10 +127,10 @@ export function buildProgramQuery(filters = {}) {
   };
 }
 
-export function listPrograms(filters = {}) {
+export async function listPrograms(filters = {}) {
   const q = buildProgramQuery(filters);
-  const total = one(`SELECT COUNT(*) AS c FROM affiliate_programs p LEFT JOIN categories c ON c.id = p.category_id WHERE ${q.where}`, ...q.params).c;
-  const rows = many(
+  const total = (await one(`SELECT COUNT(*) AS c FROM affiliate_programs p LEFT JOIN categories c ON c.id = p.category_id WHERE ${q.where}`, ...q.params)).c;
+  const rows = await many(
     `${SELECT_BASE} WHERE ${q.where} ORDER BY ${q.order} LIMIT ? OFFSET ?`,
     ...q.params,
     q.perPage,
@@ -145,20 +145,21 @@ export function listPrograms(filters = {}) {
   };
 }
 
-export function facets() {
-  const categoryRows = many(
+export async function facets() {
+  const categoryRows = await many(
     `SELECT c.slug, c.name, c.icon, c.accent, COUNT(p.id) AS count
        FROM categories c LEFT JOIN affiliate_programs p ON p.category_id = c.id AND p.status = 'approved'
-      GROUP BY c.id ORDER BY c.position, c.name`
+      GROUP BY c.id, c.slug, c.name, c.icon, c.accent, c.position ORDER BY c.position, c.name`
   );
-  const networks = many(
+  const networks = await many(
     `SELECT network AS value, COUNT(*) AS count FROM affiliate_programs WHERE status = 'approved' GROUP BY network ORDER BY count DESC`
   );
-  const commissionTypes = many(
+  const commissionTypes = await many(
     `SELECT commission_type AS value, COUNT(*) AS count FROM affiliate_programs WHERE status = 'approved' GROUP BY commission_type`
   );
   const paymentMap = new Map();
-  many(`SELECT payment_methods FROM affiliate_programs WHERE status = 'approved'`).forEach((row) => {
+  const paymentRows = await many(`SELECT payment_methods FROM affiliate_programs WHERE status = 'approved'`);
+  paymentRows.forEach((row) => {
     let parsed = [];
     try {
       parsed = JSON.parse(row.payment_methods || '[]');
@@ -174,40 +175,44 @@ export function facets() {
   return { categories: categoryRows, networks, commissionTypes, paymentMethods };
 }
 
-export function getProgramBySlug(slug, viewerId = null) {
-  const row = one(`${SELECT_BASE} WHERE p.slug = ?`, slug);
+export async function getProgramBySlug(slug, viewerId = null) {
+  const row = await one(`${SELECT_BASE} WHERE p.slug = ?`, slug);
   if (!row) return null;
   const extra = {};
   if (viewerId) {
-    extra.saved = Boolean(one('SELECT id FROM saved_programs WHERE user_id = ? AND program_id = ?', viewerId, row.id));
-    extra.application = one('SELECT status, applied_at, notes FROM applications WHERE user_id = ? AND program_id = ?', viewerId, row.id) || null;
+    extra.saved = Boolean(await one('SELECT id FROM saved_programs WHERE user_id = ? AND program_id = ?', viewerId, row.id));
+    extra.application = (await one('SELECT status, applied_at, notes FROM applications WHERE user_id = ? AND program_id = ?', viewerId, row.id)) || null;
   } else {
     extra.saved = false;
     extra.application = null;
   }
-  const reviews = many(
+  const reviews = await many(
     `SELECT id, author, rating, body, created_at FROM reviews WHERE program_id = ? AND status = 'approved' ORDER BY created_at DESC LIMIT 8`,
     row.id
   );
-  const similar = many(
-    `${SELECT_BASE} WHERE p.status = 'approved' AND p.id != ? AND p.category_id = ? ORDER BY (p.view_count + p.click_count * 4) DESC LIMIT 3`,
-    row.id,
-    row.category_id
+  const similar = (
+    await many(
+      `${SELECT_BASE} WHERE p.status = 'approved' AND p.id != ? AND p.category_id = ? ORDER BY (p.view_count + p.click_count * 4) DESC LIMIT 3`,
+      row.id,
+      row.category_id
+    )
   ).map((r) => serializeProgram(r));
   return { ...serializeProgram(row, extra), reviews, similar };
 }
 
-export function platformStats() {
-  const programs = one(`SELECT COUNT(*) AS c FROM affiliate_programs WHERE status = 'approved'`).c;
-  const brands = one(`SELECT COUNT(DISTINCT brand_name) AS c FROM affiliate_programs WHERE status = 'approved'`).c;
-  const categories = one(`SELECT COUNT(*) AS c FROM categories`).c;
+export async function platformStats() {
+  const programs = (await one(`SELECT COUNT(*) AS c FROM affiliate_programs WHERE status = 'approved'`)).c;
+  const brands = (await one(`SELECT COUNT(DISTINCT brand_name) AS c FROM affiliate_programs WHERE status = 'approved'`)).c;
+  const categories = (await one(`SELECT COUNT(*) AS c FROM categories`)).c;
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
-  const newThisMonth = one(
-    `SELECT COUNT(*) AS c FROM affiliate_programs WHERE status = 'approved' AND created_at >= ?`,
-    monthStart.toISOString()
+  const newThisMonth = (
+    await one(
+      `SELECT COUNT(*) AS c FROM affiliate_programs WHERE status = 'approved' AND created_at >= ?`,
+      monthStart.toISOString()
+    )
   ).c;
-  const totalViews = one(`SELECT SUM(view_count) AS c FROM affiliate_programs WHERE status = 'approved'`).c || 0;
+  const totalViews = (await one(`SELECT SUM(view_count) AS c FROM affiliate_programs WHERE status = 'approved'`)).c || 0;
   return { programs, brands, categories, newThisMonth, totalViews };
 }

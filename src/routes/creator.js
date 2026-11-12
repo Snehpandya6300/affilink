@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { many, one, run, transaction, nowIso } from '../db.js';
+import { many, one, insert, run, transaction, nowIso } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { serializeProgram } from '../programs.js';
 import { cleanString, isHttpUrl, safeJsonArray } from '../security.js';
@@ -8,47 +8,56 @@ import { uniqueSlug } from '../validate.js';
 const router = Router();
 router.use(requireAuth('creator'));
 
+const wrap = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
+
 const PROGRAM_SELECT = `
   SELECT p.*, c.slug AS category_slug, c.name AS category_name, c.icon AS category_icon, c.accent AS category_accent
     FROM affiliate_programs p LEFT JOIN categories c ON c.id = p.category_id
 `;
 
-router.get('/overview', (req, res) => {
+router.get('/overview', wrap(async (req, res) => {
   const userId = req.user.id;
-  const savedCount = one('SELECT COUNT(*) AS c FROM saved_programs WHERE user_id = ?', userId).c;
-  const appCounts = many('SELECT status, COUNT(*) AS c FROM applications WHERE user_id = ? GROUP BY status', userId);
+  const savedCount = (await one('SELECT COUNT(*) AS c FROM saved_programs WHERE user_id = ?', userId)).c;
+  const appCounts = await many('SELECT status, COUNT(*) AS c FROM applications WHERE user_id = ? GROUP BY status', userId);
   const counts = Object.fromEntries(appCounts.map((r) => [r.status, r.c]));
 
-  const saved = many(
-    `${PROGRAM_SELECT} JOIN saved_programs s ON s.program_id = p.id
+  const saved = (
+    await many(
+      `${PROGRAM_SELECT} JOIN saved_programs s ON s.program_id = p.id
       WHERE s.user_id = ? AND p.status = 'approved' ORDER BY s.created_at DESC LIMIT 4`,
-    userId
+      userId
+    )
   ).map((r) => serializeProgram(r, { saved: true }));
 
-  const recent = many(
-    `${PROGRAM_SELECT} WHERE p.status = 'approved' ORDER BY p.created_at DESC LIMIT 4`
+  const recent = (
+    await many(`${PROGRAM_SELECT} WHERE p.status = 'approved' ORDER BY p.created_at DESC LIMIT 4`)
   ).map((r) => serializeProgram(r));
 
-  const recommended = many(
-    `${PROGRAM_SELECT}
+  const recommended = (
+    await many(
+      `${PROGRAM_SELECT}
       WHERE p.status = 'approved'
         AND p.id NOT IN (SELECT program_id FROM saved_programs WHERE user_id = ?)
       ORDER BY p.featured DESC, (p.view_count + p.click_count * 4) DESC LIMIT 4`,
-    userId
+      userId
+    )
   ).map((r) => serializeProgram(r));
 
-  const viewed = many(
-    `SELECT p.*, c.slug AS category_slug, c.name AS category_name, c.icon AS category_icon, c.accent AS category_accent,
+  const viewed = (
+    await many(
+      `SELECT p.*, c.slug AS category_slug, c.name AS category_name, c.icon AS category_icon, c.accent AS category_accent,
             MAX(v.created_at) AS viewed_at
        FROM program_views v
        JOIN affiliate_programs p ON p.id = v.program_id
        LEFT JOIN categories c ON c.id = p.category_id
       WHERE v.user_id = ? AND p.status = 'approved'
-      GROUP BY p.id ORDER BY viewed_at DESC LIMIT 5`,
-    userId
+      GROUP BY p.id, c.slug, c.name, c.icon, c.accent
+      ORDER BY MAX(v.created_at) DESC LIMIT 5`,
+      userId
+    )
   ).map((r) => serializeProgram(r, { viewedAt: r.viewed_at }));
 
-  const applications = many(
+  const applications = await many(
     `SELECT a.id, a.status, a.applied_at, a.updated_at, a.notes, p.brand_name, p.slug, p.logo_url, p.commission_label
        FROM applications a JOIN affiliate_programs p ON p.id = a.program_id
       WHERE a.user_id = ? ORDER BY a.applied_at DESC LIMIT 5`,
@@ -69,42 +78,42 @@ router.get('/overview', (req, res) => {
     viewed,
     applications,
   });
-});
+}));
 
-router.get('/saved', (req, res) => {
-  const rows = many(
+router.get('/saved', wrap(async (req, res) => {
+  const rows = await many(
     `${PROGRAM_SELECT} JOIN saved_programs s ON s.program_id = p.id
       WHERE s.user_id = ? AND p.status = 'approved' ORDER BY s.created_at DESC`,
     req.user.id
   );
   res.json({ items: rows.map((r) => serializeProgram(r, { saved: true })) });
-});
+}));
 
-router.post('/saved/:programId', (req, res) => {
-  const program = one(`SELECT id FROM affiliate_programs WHERE id = ? AND status = 'approved'`, Number(req.params.programId));
+router.post('/saved/:programId', wrap(async (req, res) => {
+  const program = await one(`SELECT id FROM affiliate_programs WHERE id = ? AND status = 'approved'`, Number(req.params.programId));
   if (!program) return res.status(404).json({ error: 'Program not found.' });
-  const existing = one('SELECT id FROM saved_programs WHERE user_id = ? AND program_id = ?', req.user.id, program.id);
+  const existing = await one('SELECT id FROM saved_programs WHERE user_id = ? AND program_id = ?', req.user.id, program.id);
   if (existing) return res.json({ saved: true, message: 'Already saved.' });
-  transaction(() => {
-    run('INSERT INTO saved_programs (user_id, program_id, created_at) VALUES (?,?,?)', req.user.id, program.id, nowIso());
-    run('UPDATE affiliate_programs SET save_count = save_count + 1 WHERE id = ?', program.id);
+  await transaction(async () => {
+    await run('INSERT INTO saved_programs (user_id, program_id, created_at) VALUES (?,?,?)', req.user.id, program.id, nowIso());
+    await run('UPDATE affiliate_programs SET save_count = save_count + 1 WHERE id = ?', program.id);
   });
   res.status(201).json({ saved: true, message: 'Saved to your programs.' });
-});
+}));
 
-router.delete('/saved/:programId', (req, res) => {
+router.delete('/saved/:programId', wrap(async (req, res) => {
   const programId = Number(req.params.programId);
-  const existing = one('SELECT id FROM saved_programs WHERE user_id = ? AND program_id = ?', req.user.id, programId);
+  const existing = await one('SELECT id FROM saved_programs WHERE user_id = ? AND program_id = ?', req.user.id, programId);
   if (!existing) return res.json({ saved: false });
-  transaction(() => {
-    run('DELETE FROM saved_programs WHERE id = ?', existing.id);
-    run('UPDATE affiliate_programs SET save_count = MAX(save_count - 1, 0) WHERE id = ?', programId);
+  await transaction(async () => {
+    await run('DELETE FROM saved_programs WHERE id = ?', existing.id);
+    await run('UPDATE affiliate_programs SET save_count = CASE WHEN save_count > 0 THEN save_count - 1 ELSE 0 END WHERE id = ?', programId);
   });
   res.json({ saved: false, message: 'Removed from saved programs.' });
-});
+}));
 
-router.get('/applications', (req, res) => {
-  const rows = many(
+router.get('/applications', wrap(async (req, res) => {
+  const rows = await many(
     `SELECT a.id, a.status, a.applied_at, a.updated_at, a.notes,
             p.id AS program_id, p.slug, p.brand_name, p.logo_url, p.commission_label, p.network, p.signup_url
        FROM applications a JOIN affiliate_programs p ON p.id = a.program_id
@@ -129,19 +138,19 @@ router.get('/applications', (req, res) => {
       },
     })),
   });
-});
+}));
 
-router.post('/applications', (req, res) => {
+router.post('/applications', wrap(async (req, res) => {
   const programId = Number(req.body?.programId);
-  const program = one(
+  const program = await one(
     `SELECT id, signup_url FROM affiliate_programs WHERE id = ? AND status = 'approved'`,
     programId
   );
   if (!program) return res.status(404).json({ error: 'Program not found or not open.' });
-  const existing = one('SELECT id FROM applications WHERE user_id = ? AND program_id = ?', req.user.id, programId);
+  const existing = await one('SELECT id FROM applications WHERE user_id = ? AND program_id = ?', req.user.id, programId);
   if (existing) return res.status(409).json({ error: 'You are already tracking an application for this program.', applicationId: existing.id });
   const now = nowIso();
-  const { lastInsertRowid } = run(
+  const applicationId = await insert(
     `INSERT INTO applications (user_id, program_id, status, applied_at, notes, updated_at) VALUES (?,?,?,?,?,?)`,
     req.user.id,
     programId,
@@ -151,16 +160,16 @@ router.post('/applications', (req, res) => {
     now
   );
   res.status(201).json({
-    id: lastInsertRowid,
+    id: applicationId,
     signupUrl: program.signup_url,
     message: 'Tracking added. Continue on the affiliate network to submit your real application.',
   });
-});
+}));
 
 const STATUSES = ['pending', 'approved', 'rejected', 'withdrawn'];
 
-router.patch('/applications/:id', (req, res) => {
-  const app = one('SELECT * FROM applications WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
+router.patch('/applications/:id', wrap(async (req, res) => {
+  const app = await one('SELECT * FROM applications WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
   if (!app) return res.status(404).json({ error: 'Application not found.' });
   const status = cleanString(req.body?.status, 20);
   const notes = req.body?.notes === undefined ? app.notes : cleanString(req.body.notes, 500);
@@ -169,7 +178,7 @@ router.patch('/applications/:id', (req, res) => {
   if (req.body?.appliedAt && Number.isNaN(new Date(appliedAt).getTime())) {
     return res.status(400).json({ error: 'Invalid application date.' });
   }
-  run(
+  await run(
     'UPDATE applications SET status = ?, notes = ?, applied_at = ?, updated_at = ? WHERE id = ?',
     status || app.status,
     notes,
@@ -178,17 +187,17 @@ router.patch('/applications/:id', (req, res) => {
     app.id
   );
   res.json({ ok: true, message: 'Application updated.' });
-});
+}));
 
-router.delete('/applications/:id', (req, res) => {
-  const result = run('DELETE FROM applications WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
+router.delete('/applications/:id', wrap(async (req, res) => {
+  const result = await run('DELETE FROM applications WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
   if (!result.changes) return res.status(404).json({ error: 'Application not found.' });
   res.json({ ok: true, message: 'Application removed.' });
-});
+}));
 
-router.get('/profile', (req, res) => {
-  const user = one('SELECT id, name, email, avatar_url, created_at FROM users WHERE id = ?', req.user.id);
-  const profile = one('SELECT * FROM creator_profiles WHERE user_id = ?', req.user.id) || {};
+router.get('/profile', wrap(async (req, res) => {
+  const user = await one('SELECT id, name, email, avatar_url, created_at FROM users WHERE id = ?', req.user.id);
+  const profile = (await one('SELECT * FROM creator_profiles WHERE user_id = ?', req.user.id)) || {};
   let promo = [];
   try {
     promo = JSON.parse(profile.promo_methods || '[]');
@@ -213,9 +222,9 @@ router.get('/profile', (req, res) => {
       memberSince: user.created_at,
     },
   });
-});
+}));
 
-router.put('/profile', (req, res) => {
+router.put('/profile', wrap(async (req, res) => {
   const b = req.body || {};
   const fields = {};
   const name = cleanString(b.name, 80);
@@ -232,9 +241,9 @@ router.put('/profile', (req, res) => {
   if (Object.keys(fields).length) return res.status(400).json({ error: 'Please fix the highlighted fields.', fields });
 
   const now = nowIso();
-  transaction(() => {
-    run('UPDATE users SET name = ?, avatar_url = ?, updated_at = ? WHERE id = ?', name, avatarUrl || null, now, req.user.id);
-    run(
+  await transaction(async () => {
+    await run('UPDATE users SET name = ?, avatar_url = ?, updated_at = ? WHERE id = ?', name, avatarUrl || null, now, req.user.id);
+    await run(
       `UPDATE creator_profiles SET website = ?, twitter = ?, linkedin = ?, instagram = ?, youtube = ?, niche = ?,
               audience_size = ?, country = ?, promo_methods = ?, bio = ?, updated_at = ?
         WHERE user_id = ?`,
@@ -253,7 +262,7 @@ router.put('/profile', (req, res) => {
     );
   });
   res.json({ ok: true, message: 'Profile saved.' });
-});
+}));
 
 /* ---------------------------------------------------------------------------
    Creator-owned affiliate links.
@@ -304,21 +313,21 @@ function validateOffer(body = {}) {
   };
 }
 
-router.get('/offers', (req, res) => {
-  const rows = many('SELECT * FROM creator_offers WHERE user_id = ? ORDER BY created_at DESC', req.user.id);
+router.get('/offers', wrap(async (req, res) => {
+  const rows = await many('SELECT * FROM creator_offers WHERE user_id = ? ORDER BY created_at DESC', req.user.id);
   const clicks = rows.reduce((sum, row) => sum + row.clicks, 0);
   res.json({ items: rows.map(serializeOffer), stats: { total: rows.length, clicks, active: rows.filter((r) => r.is_active).length } });
-});
+}));
 
-router.post('/offers', (req, res) => {
-  const count = one('SELECT COUNT(*) AS c FROM creator_offers WHERE user_id = ?', req.user.id).c;
+router.post('/offers', wrap(async (req, res) => {
+  const count = (await one('SELECT COUNT(*) AS c FROM creator_offers WHERE user_id = ?', req.user.id)).c;
   if (count >= OFFER_LIMIT) return res.status(400).json({ error: `You can keep up to ${OFFER_LIMIT} links. Delete one to add another.` });
   const { fields, data, hasErrors } = validateOffer(req.body || {});
   if (hasErrors) return res.status(400).json({ error: 'Please fix the highlighted fields.', fields });
 
   const now = nowIso();
-  const slug = uniqueSlug(`${data.brandName}-${data.title}`, 'creator_offers');
-  const { lastInsertRowid } = run(
+  const slug = await uniqueSlug(`${data.brandName}-${data.title}`, 'creator_offers');
+  const offerId = await insert(
     `INSERT INTO creator_offers (user_id, slug, brand_name, title, category, destination_url, commission_note, description, clicks, is_active, created_at, updated_at)
      VALUES (?,?,?,?,?,?,?,?,0,1,?,?)`,
     req.user.id,
@@ -332,12 +341,12 @@ router.post('/offers', (req, res) => {
     now,
     now
   );
-  const row = one('SELECT * FROM creator_offers WHERE id = ?', lastInsertRowid);
+  const row = await one('SELECT * FROM creator_offers WHERE id = ?', offerId);
   res.status(201).json({ offer: serializeOffer(row), message: 'Affiliate link created.' });
-});
+}));
 
-router.put('/offers/:id', (req, res) => {
-  const existing = one('SELECT * FROM creator_offers WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
+router.put('/offers/:id', wrap(async (req, res) => {
+  const existing = await one('SELECT * FROM creator_offers WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
   if (!existing) return res.status(404).json({ error: 'Link not found.' });
   const body = req.body || {};
   const merged = {
@@ -352,7 +361,7 @@ router.put('/offers/:id', (req, res) => {
   if (hasErrors) return res.status(400).json({ error: 'Please fix the highlighted fields.', fields });
 
   const isActive = body.isActive === undefined ? existing.is_active : body.isActive ? 1 : 0;
-  run(
+  await run(
     `UPDATE creator_offers SET brand_name = ?, title = ?, category = ?, destination_url = ?, commission_note = ?, description = ?, is_active = ?, updated_at = ?
       WHERE id = ? AND user_id = ?`,
     data.brandName,
@@ -366,14 +375,13 @@ router.put('/offers/:id', (req, res) => {
     existing.id,
     req.user.id
   );
-  res.json({ offer: serializeOffer(one('SELECT * FROM creator_offers WHERE id = ?', existing.id)), message: 'Link updated.' });
-});
+  res.json({ offer: serializeOffer(await one('SELECT * FROM creator_offers WHERE id = ?', existing.id)), message: 'Link updated.' });
+}));
 
-router.delete('/offers/:id', (req, res) => {
-  const result = run('DELETE FROM creator_offers WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
+router.delete('/offers/:id', wrap(async (req, res) => {
+  const result = await run('DELETE FROM creator_offers WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
   if (!result.changes) return res.status(404).json({ error: 'Link not found.' });
   res.json({ ok: true, message: 'Link deleted.' });
-});
+}));
 
 export default router;
-

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { db, many, one, run, transaction, ROOT, nowIso } from './db.js';
+import { many, one, insert, run, transaction, migrate, ROOT, nowIso } from './db.js';
 import { hashPassword } from './security.js';
 import { REAL_PROGRAMS, VERIFIED_AT } from './real-programs.js';
 
@@ -53,7 +53,7 @@ function brandLogo(slug, name, [c1, c2]) {
 
 const NETWORK_SLUG = (n) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-function seedUsers() {
+async function seedUsers() {
   const now = nowIso();
   const admin = { email: 'admin@affilink.demo', name: 'Avery Sloan', role: 'admin' };
   const creator = { email: 'creator@affilink.demo', name: 'Maya Chen', role: 'creator' };
@@ -61,8 +61,8 @@ function seedUsers() {
   const extraCreator = { email: 'diego@affilink.demo', name: 'Diego Ramos', role: 'creator' };
   const pendingBrand = { email: 'lena@northwind.demo', name: 'Lena Fischer', role: 'brand' };
 
-  const insertUser = (u, password, days) => {
-    const { lastInsertRowid: id } = run(
+  const insertUser = async (u, password, days) =>
+    insert(
       `INSERT INTO users (email, password_hash, name, role, status, avatar_url, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)`,
       u.email,
       hashPassword(password),
@@ -73,16 +73,14 @@ function seedUsers() {
       daysAgo(days),
       now
     );
-    return id;
-  };
 
-  const adminId = insertUser(admin, 'Admin123!', 120);
-  const creatorId = insertUser(creator, 'Creator123!', 40);
-  const brandId = insertUser(brand, 'Brand123!', 55);
-  const extraCreatorId = insertUser(extraCreator, 'Creator123!', 12);
-  const pendingBrandId = insertUser(pendingBrand, 'Brand123!', 2);
+  const adminId = await insertUser(admin, 'Admin123!', 120);
+  const creatorId = await insertUser(creator, 'Creator123!', 40);
+  const brandId = await insertUser(brand, 'Brand123!', 55);
+  const extraCreatorId = await insertUser(extraCreator, 'Creator123!', 12);
+  const pendingBrandId = await insertUser(pendingBrand, 'Brand123!', 2);
 
-  run(
+  await run(
     `INSERT INTO creator_profiles (user_id, website, twitter, linkedin, instagram, youtube, niche, audience_size, country, promo_methods, bio, updated_at)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
     creatorId,
@@ -99,7 +97,7 @@ function seedUsers() {
     now
   );
 
-  run(
+  await run(
     `INSERT INTO creator_profiles (user_id, website, twitter, niche, audience_size, country, promo_methods, bio, updated_at)
      VALUES (?,?,?,?,?,?,?,?,?)`,
     extraCreatorId,
@@ -113,7 +111,7 @@ function seedUsers() {
     now
   );
 
-  run(
+  await run(
     `INSERT INTO brand_profiles (user_id, company_name, website, logo_url, contact_email, country, about, updated_at)
      VALUES (?,?,?,?,?,?,?,?)`,
     brandId,
@@ -126,7 +124,7 @@ function seedUsers() {
     now
   );
 
-  run(
+  await run(
     `INSERT INTO brand_profiles (user_id, company_name, website, logo_url, contact_email, country, about, updated_at)
      VALUES (?,?,?,?,?,?,?,?)`,
     pendingBrandId,
@@ -142,34 +140,34 @@ function seedUsers() {
   return { adminId, creatorId, brandId, pendingBrandId };
 }
 
-export function seedDatabase() {
-  const existing = one('SELECT COUNT(*) AS c FROM categories');
+export async function seedDatabase() {
+  await migrate();
+  const existing = await one('SELECT COUNT(*) AS c FROM categories');
   if (existing && existing.c > 0) return false;
 
-  transaction(() => {
+  await transaction(async () => {
     const now = nowIso();
     const catIds = {};
-    CATEGORIES.forEach(([slug, name, description, icon, accent], i) => {
-      const { lastInsertRowid } = run(
+    for (const [index, [slug, name, description, icon, accent]] of CATEGORIES.entries()) {
+      catIds[slug] = await insert(
         `INSERT INTO categories (slug, name, description, icon, accent, position, created_at) VALUES (?,?,?,?,?,?,?)`,
         slug,
         name,
         description,
         icon,
         accent,
-        i,
+        index,
         now
       );
-      catIds[slug] = lastInsertRowid;
-    });
+    }
 
-    const { creatorId, brandId, pendingBrandId } = seedUsers();
+    const { creatorId, brandId, pendingBrandId } = await seedUsers();
 
-    REAL_PROGRAMS.forEach((p, index) => {
+    for (const [index, p] of REAL_PROGRAMS.entries()) {
       const logo = brandLogo(p.slug, p.brand, p.colors);
       const created = daysAgo(index < 7 ? Math.min(p.days, 2 + index * 3) : p.days);
       const [type, value, label] = p.commission;
-      const { lastInsertRowid: pid } = run(
+      const pid = await insert(
         `INSERT INTO affiliate_programs
          (slug, brand_name, logo_url, title, description, category_id, website_url, signup_url,
           commission_type, commission_value, commission_label, commission_tiers, cookie_days, min_payout,
@@ -213,9 +211,9 @@ export function seedDatabase() {
         created
       );
       if (p.featured) {
-        run(`INSERT INTO featured_programs (program_id, position, created_at) VALUES (?,?,?)`, pid, index, now);
+        await run(`INSERT INTO featured_programs (program_id, position, created_at) VALUES (?,?,?)`, pid, index, now);
       }
-    });
+    }
 
     // Brand-owned demo listings so the brand + admin flows have real pending data.
     const ownedByBrand = [
@@ -249,10 +247,10 @@ export function seedDatabase() {
       },
     ];
 
-    ownedByBrand.forEach((p, i) => {
+    for (const [i, p] of ownedByBrand.entries()) {
       const logo = brandLogo(p.slug, p.brand, i % 2 ? ['#0f766e', '#22c55e'] : ['#6457f9', '#22d3ee']);
       const created = daysAgo(6 - i);
-      run(
+      await run(
         `INSERT INTO affiliate_programs
          (slug, brand_name, logo_url, title, description, category_id, website_url, signup_url,
           commission_type, commission_value, commission_label, cookie_days, min_payout, currency,
@@ -292,19 +290,19 @@ export function seedDatabase() {
         created,
         p.status === 'approved' ? created : null
       );
-    });
+    }
 
     // Demo creator activity
-    const semrush = one('SELECT id FROM affiliate_programs WHERE slug = ?', 'semrush');
-    const webflow = one('SELECT id FROM affiliate_programs WHERE slug = ?', 'webflow');
-    const framer = one('SELECT id FROM affiliate_programs WHERE slug = ?', 'framer');
-    const shopify = one('SELECT id FROM affiliate_programs WHERE slug = ?', 'shopify');
-    [
+    const semrush = await one('SELECT id FROM affiliate_programs WHERE slug = ?', 'semrush');
+    const webflow = await one('SELECT id FROM affiliate_programs WHERE slug = ?', 'webflow');
+    const framer = await one('SELECT id FROM affiliate_programs WHERE slug = ?', 'framer');
+    const shopify = await one('SELECT id FROM affiliate_programs WHERE slug = ?', 'shopify');
+    for (const [i, [id, status]] of [
       [semrush.id, 'approved'],
       [webflow.id, 'pending'],
       [framer.id, 'pending'],
-    ].forEach(([id, status], i) => {
-      run(
+    ].entries()) {
+      await run(
         `INSERT INTO applications (user_id, program_id, status, applied_at, notes, updated_at) VALUES (?,?,?,?,?,?)`,
         creatorId,
         id,
@@ -313,13 +311,13 @@ export function seedDatabase() {
         i === 0 ? 'Approved through Impact.' : 'Applied through the network portal.',
         daysAgo(10 - i)
       );
-    });
-    [semrush.id, shopify.id, framer.id].forEach((id, i) => {
-      run(`INSERT INTO saved_programs (user_id, program_id, created_at) VALUES (?,?,?)`, creatorId, id, daysAgo(9 - i));
-    });
+    }
+    for (const [i, id] of [semrush.id, shopify.id, framer.id].entries()) {
+      await run(`INSERT INTO saved_programs (user_id, program_id, created_at) VALUES (?,?,?)`, creatorId, id, daysAgo(9 - i));
+    }
 
     // Creator-owned affiliate links (the creator account's own Amazon/Booking links).
-    [
+    for (const o of [
       {
         slug: 'mayas-amazon-gear-list',
         brand: 'Amazon Associates',
@@ -342,8 +340,8 @@ export function seedDatabase() {
         clicks: 46,
         days: 9,
       },
-    ].forEach((o) => {
-      run(
+    ]) {
+      await run(
         `INSERT INTO creator_offers (user_id, slug, brand_name, title, category, destination_url, commission_note, description, clicks, is_active, created_at, updated_at)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
         creatorId,
@@ -359,7 +357,7 @@ export function seedDatabase() {
         daysAgo(o.days),
         daysAgo(o.days)
       );
-    });
+    }
 
     // Seed 30 days of view history so dashboards and charts start with believable data.
     const seedPrograms = [
@@ -368,13 +366,13 @@ export function seedDatabase() {
         shopify.id,
         framer.id,
         webflow.id,
-        ...many('SELECT id FROM affiliate_programs WHERE brand_user_id IS NOT NULL').map((r) => r.id),
+        ...(await many('SELECT id FROM affiliate_programs WHERE brand_user_id IS NOT NULL')).map((r) => r.id),
       ]),
     ];
     for (let d = 29; d >= 0; d--) {
       const perDay = 4 + Math.round((30 - d) / 4) + (d % 3);
       for (let i = 0; i < perDay; i++) {
-        run(
+        await run(
           `INSERT INTO program_views (program_id, user_id, visitor, created_at) VALUES (?,?,?,?)`,
           seedPrograms[i % seedPrograms.length],
           null,
@@ -383,7 +381,7 @@ export function seedDatabase() {
         );
       }
       for (let i = 0; i < Math.max(2, Math.round(perDay / 5)); i++) {
-        run(
+        await run(
           `INSERT INTO outbound_clicks (program_id, user_id, created_at) VALUES (?,?,?)`,
           seedPrograms[(d + i) % seedPrograms.length],
           null,
@@ -399,8 +397,8 @@ export function seedDatabase() {
       ['Tom Okafor', 'Newsletter operator', 'I found three finance programs in a niche I had never covered. Two of them now out-earn my old top offer.', 4],
       ['Sara Lindqvist', 'Brand partnerships lead', 'Listing our program took ten minutes. The review process was clear and the traffic quality has been strong.', 5],
     ];
-    testimonials.forEach(([name, role, quote, rating], i) => {
-      run(
+    for (const [i, [name, role, quote, rating]] of testimonials.entries()) {
+      await run(
         `INSERT INTO testimonials (name, role, quote, avatar_url, rating, status, is_demo, created_at) VALUES (?,?,?,?,?,?,?,?)`,
         name,
         role,
@@ -411,7 +409,7 @@ export function seedDatabase() {
         1,
         daysAgo(30 - i * 4)
       );
-    });
+    }
 
     const content = {
       hero_title: 'Find Affiliate Programs Worth Promoting.',
@@ -422,10 +420,9 @@ export function seedDatabase() {
         'Put your program in front of creators, publishers and niche experts who are already writing about what you sell. Publish once, get discovered by the people who convert.',
       announcement: 'Program terms are checked against official affiliate pages. Accounts, saves and submissions in this environment are demo data.',
     };
-    Object.entries(content).forEach(([key, value]) => {
-      run(`INSERT INTO site_content (key, value, updated_at) VALUES (?,?,?)`, key, value, now);
-    });
-
+    for (const [key, value] of Object.entries(content)) {
+      await run(`INSERT INTO site_content (key, value, updated_at) VALUES (?,?,?)`, key, value, now);
+    }
   });
 
   return true;

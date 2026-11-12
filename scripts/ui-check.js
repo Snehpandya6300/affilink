@@ -6,10 +6,10 @@
  */
 import { JSDOM, VirtualConsole } from 'jsdom';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 
 const base = process.argv[2] || 'http://127.0.0.1:3000';
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const realFetch = globalThis.fetch;
 
@@ -339,7 +339,7 @@ if (process.env.UI_PAGE) {
 } else {
   const { spawnSync } = await import('node:child_process');
   for (const page of pages) {
-    const res = spawnSync(process.execPath, [new URL(import.meta.url).pathname, base], {
+    const res = spawnSync(process.execPath, [fileURLToPath(import.meta.url), base], {
       env: { ...process.env, UI_PAGE: page.name },
       encoding: 'utf8',
     });

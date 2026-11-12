@@ -3,7 +3,7 @@ import { one } from './db.js';
 
 const TYPES = ['percentage', 'recurring', 'fixed', 'tiered'];
 
-export function validateProgramInput(body = {}, { partial = false } = {}) {
+export async function validateProgramInput(body = {}, { partial = false } = {}) {
   const errors = {};
   const out = {};
 
@@ -35,7 +35,7 @@ export function validateProgramInput(body = {}, { partial = false } = {}) {
   else out.description = description;
 
   const categorySlug = cleanString(body.category, 60) || cleanString(body.categorySlug, 60);
-  const category = categorySlug ? one('SELECT id FROM categories WHERE slug = ?', categorySlug) : null;
+  const category = categorySlug ? await one('SELECT id FROM categories WHERE slug = ?', categorySlug) : null;
   if (!category && !partial) errors.category = 'Choose a category.';
   else if (category) out.categoryId = category.id;
   else if (categorySlug && partial) errors.category = 'Choose a valid category.';
@@ -121,14 +121,14 @@ export function validateProgramInput(body = {}, { partial = false } = {}) {
   return { errors, data: out, hasErrors: Object.keys(errors).length > 0 };
 }
 
-export function uniqueSlug(base, table = 'affiliate_programs', ignoreId = null) {
+export async function uniqueSlug(base, table = 'affiliate_programs', ignoreId = null) {
   const root = slugify(base);
   let candidate = root;
   let n = 2;
   while (true) {
     const row = ignoreId
-      ? one(`SELECT id FROM ${table} WHERE slug = ? AND id != ?`, candidate, ignoreId)
-      : one(`SELECT id FROM ${table} WHERE slug = ?`, candidate);
+      ? await one(`SELECT id FROM ${table} WHERE slug = ? AND id != ?`, candidate, ignoreId)
+      : await one(`SELECT id FROM ${table} WHERE slug = ?`, candidate);
     if (!row) return candidate;
     candidate = `${root}-${n++}`;
     if (n > 500) return `${root}-${Date.now()}`;
