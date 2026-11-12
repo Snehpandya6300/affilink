@@ -140,9 +140,8 @@ router.post('/forgot-password', wrap(async (req, res) => {
       new Date(Date.now() + 60 * 60 * 1000).toISOString(),
       nowIso()
     );
-    // Demo environment: no mail provider is configured, so the link is returned directly.
+    // No mail provider is configured, so the link is returned to the page directly.
     response.demoResetUrl = `/reset-password?token=${token}`;
-    response.demoNotice = 'Demo mode: email delivery is disabled, use the link below.';
   }
   res.json(response);
 }));
