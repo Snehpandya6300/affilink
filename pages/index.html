@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+  <link rel="canonical" href="{{CANONICAL}}">
+  <meta name="robots" content="{{ROBOTS}}">
+  <meta property="og:title" content="{{TITLE}}">
+  <meta property="og:description" content="{{DESCRIPTION}}">
+  <meta property="og:url" content="{{CANONICAL}}">
+  <meta property="og:type" content="{{OG_TYPE}}">
+  <meta property="og:image" content="{{OG_IMAGE}}">
+  <meta property="og:site_name" content="Affilink">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  {{EXTRA_HEAD}}
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+</head>
+<body class="{{BODY_CLASS}}">
+<a class="skip-link" href="#main">Skip to content</a>
+<!-- include:header -->
+
+<main id="main">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-badge" data-hero>
+          <span class="tag">Real programs</span>
+          <span><span data-hero-count>30+</span> verified affiliate programs · 8 niches · checked November 2026</span>
+        </div>
+        <h1 data-hero>Find affiliate programs <span class="gradient-text">worth promoting.</span></h1>
+        <p class="hero-sub" data-hero>
+          Discover thousands of affiliate opportunities from leading brands. Compare commissions, explore niches,
+          and find your next revenue stream.
+        </p>
+
+        <div class="search-shell" data-hero>
+          <form class="search-form" action="/programs" method="get" role="search">
+            <div class="search-input-wrap">
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <label class="sr-only" for="heroSearch">Search by brand, niche or keyword</label>
+              <input id="heroSearch" name="q" type="search" placeholder="Search by brand, niche or keyword…" autocomplete="off">
+            </div>
+            <div class="search-divider" aria-hidden="true"></div>
+            <label class="sr-only" for="heroCategory">Category</label>
+            <select class="search-select" id="heroCategory" name="category" data-category-select>
+              <option value="">All categories</option>
+            </select>
+            <button class="btn btn-primary" type="submit">Search</button>
+          </form>
+        </div>
+
+        <div class="hero-actions" data-hero>
+          <a class="btn btn-dark btn-lg" href="/programs">Explore Programs <i class="bi bi-arrow-right"></i></a>
+          <a class="btn btn-ghost btn-lg" href="{{SUBMIT_HREF}}">Submit Your Program</a>
+        </div>
+        <p class="hero-note" data-hero>Free to browse. No account required to compare programs.</p>
+
+        <div class="quick-tags" data-hero>
+          <span>Popular:</span>
+          <a href="/programs?category=saas">SaaS</a>
+          <a href="/programs?category=ai-tools">AI Tools</a>
+          <a href="/programs?category=finance">Finance</a>
+          <a href="/programs?commissionType=recurring">Recurring</a>
+          <a href="/programs?category=hosting">Hosting</a>
+        </div>
+
+        <div class="stats-strip" data-reveal aria-label="Directory statistics">
+          <div class="stat-cell"><div class="stat-value" data-stat="programs">—</div><div class="stat-label">Affiliate Programs</div><div class="stat-foot">Verified listings</div></div>
+          <div class="stat-cell"><div class="stat-value" data-stat="brands">—</div><div class="stat-label">Listed Brands</div><div class="stat-foot">Verified listings</div></div>
+          <div class="stat-cell"><div class="stat-value" data-stat="categories">—</div><div class="stat-label">Categories</div><div class="stat-foot">Verified listings</div></div>
+          <div class="stat-cell"><div class="stat-value" data-stat="newThisMonth">—</div><div class="stat-label">New Programs This Month</div><div class="stat-foot">Verified listings</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured programs -->
+  <section class="section" id="featured">
+    <div class="container">
+      <div class="section-head flex items-center justify-between wrap gap-3" style="max-width:none">
+        <div>
+          <span class="eyebrow">Featured programs</span>
+          <h2 class="mb-0">High-converting programs, hand picked.</h2>
+          <p class="mt-2">A mix of recurring SaaS payouts, flat bounties and high-ticket affiliate offers.</p>
+        </div>
+        <a class="btn btn-ghost" href="/programs">View all programs <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="program-grid" data-featured-programs aria-live="polite" aria-busy="true">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="section section-soft" id="categories">
+    <div class="container">
+      <div class="section-head center">
+        <span class="eyebrow">Browse by niche</span>
+        <h2>Find your category.</h2>
+        <p>Every category is curated with programs that share realistic payout and cookie data.</p>
+      </div>
+      <div class="category-grid" data-category-grid data-reveal-group></div>
+      <div class="text-center mt-4">
+        <a class="btn btn-ghost" href="/categories">Explore all categories <i class="bi bi-grid"></i></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trending + recently added -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Momentum</span>
+        <h2>Trending programs this week.</h2>
+        <p>Ranked by views, outbound clicks and saves from creators using the directory.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:32px;align-items:start" class="trending-layout">
+        <div class="program-grid two-col" data-trending-programs>
+          <div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+        <aside class="panel" data-reveal>
+          <div class="panel-head">
+            <h2><i class="bi bi-stars text-accent"></i> Recently added</h2>
+            <a class="link" href="/programs?sort=newest">View all</a>
+          </div>
+          <div class="dash-list" data-recent-programs>
+            <div class="skeleton" style="height:64px"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section section-soft" id="how-it-works">
+    <div class="container">
+      <div class="section-head center">
+        <span class="eyebrow">How it works</span>
+        <h2>From discovery to commission in four steps.</h2>
+        <p>Affilink is a discovery layer. Applications always happen on the brand's official affiliate network.</p>
+      </div>
+      <div class="steps" data-reveal-group>
+        <div class="step">
+          <h3>Discover programs</h3>
+          <p>Search by brand, niche or keyword, then narrow down with commission, cookie and network filters.</p>
+        </div>
+        <div class="step">
+          <h3>Compare commissions and benefits</h3>
+          <p>See payout structure, minimum payout, payment frequency and requirements side by side.</p>
+        </div>
+        <div class="step">
+          <h3>Apply through the network</h3>
+          <p>Save a program and apply on the brand's official affiliate page — we never approve you ourselves.</p>
+        </div>
+        <div class="step">
+          <h3>Promote and earn</h3>
+          <p>Track your applications here, then promote products and collect commission from the brand.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- For brands -->
+  <section class="section" id="for-brands">
+    <div class="container">
+      <div class="brand-panel">
+        <div>
+          <span class="eyebrow">For brands</span>
+          <h2 data-content="brand_headline">Get your affiliate program discovered.</h2>
+          <p class="text-muted" data-content="brand_copy">
+            Put your program in front of creators, publishers and niche experts who already write about what you sell.
+            Publish once, get discovered by the people most likely to convert.
+          </p>
+          <ul class="brand-list">
+            <li><i class="bi bi-check2-circle"></i><span>Reach creators filtering by category, commission and network.</span></li>
+            <li><i class="bi bi-check2-circle"></i><span>Control your listing: payout terms, cookie length, requirements and countries.</span></li>
+            <li><i class="bi bi-check2-circle"></i><span>Track listing views and outbound application clicks in your dashboard.</span></li>
+            <li><i class="bi bi-check2-circle"></i><span>Reviewed listings only — every program is approved before it goes live.</span></li>
+          </ul>
+          <div class="flex gap-3 wrap">
+            <a class="btn btn-primary" href="{{SUBMIT_HREF}}">List Your Affiliate Program</a>
+            <a class="btn btn-ghost" href="/for-brands">How it works</a>
+          </div>
+        </div>
+        <div class="brand-preview" data-reveal>
+          <div class="preview-head">
+            <span class="avatar">NL</span>
+            <div>
+              <div style="font-family:var(--font-display);font-weight:700;color:var(--ink);font-size:.95rem">Northwind Labs</div>
+              <div class="text-xs text-muted">Sample brand listing preview</div>
+            </div>
+            <span class="badge badge-success" style="margin-left:auto">Approved</span>
+          </div>
+          <div class="sparkline" aria-hidden="true">
+            <span style="height:38%"></span><span style="height:52%"></span><span style="height:44%"></span>
+            <span style="height:68%"></span><span style="height:74%"></span><span style="height:62%"></span>
+            <span style="height:88%"></span><span style="height:96%"></span>
+          </div>
+          <div class="preview-row"><span class="label">Program views</span><span class="value">1,284</span></div>
+          <div class="preview-row"><span class="label">Outbound clicks</span><span class="value">168</span></div>
+          <div class="preview-row"><span class="label">Creator saves</span><span class="value">57</span></div>
+          <div class="preview-row"><span class="label">Click-through rate</span><span class="value">13.1%</span></div>
+          <p class="text-xs text-muted mt-2 mb-0"><i class="bi bi-info-circle"></i> Illustrative dashboard preview with sample data.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="section section-soft">
+    <div class="container">
+      <div class="section-head center">
+        <span class="eyebrow">Sample feedback</span>
+        <h2>What demo users say.</h2>
+        <p>Illustrative testimonials written for this demo environment — not real customer reviews or brand endorsements.</p>
+      </div>
+      <div class="testimonial-grid" data-testimonials data-reveal-group>
+        <div class="skeleton" style="height:200px"></div>
+        <div class="skeleton" style="height:200px"></div>
+        <div class="skeleton" style="height:200px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-head center">
+        <span class="eyebrow">FAQ</span>
+        <h2>Questions, answered.</h2>
+        <p>Everything you need to know before you start applying or listing.</p>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item" open>
+          <summary>Is Affilink free to use? <i class="bi bi-plus-lg"></i></summary>
+          <div class="faq-answer">Yes. Browsing programs and creating a creator account is free. Brands can submit a program for review at no cost in this demo.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Does Affilink approve my affiliate application? <i class="bi bi-plus-lg"></i></summary>
+          <div class="faq-answer">No. Affilink is a discovery platform. When you click "Apply", we send you to the brand's official affiliate network or signup page. Approval is entirely up to the brand.</div>
+        </details>
+        <details class="faq-item">
+          <summary>How are commissions and cookie durations verified? <i class="bi bi-plus-lg"></i></summary>
+          <div class="faq-answer">Each listing links to the brand's own affiliate page and records the date its commission, cookie and payout terms were checked (November 2026). Programs change their terms often, so confirm the current numbers on the brand's page before promoting. Where a brand doesn't publish a figure, the listing says "Not published" rather than guessing.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Can I add my own Amazon or brand affiliate link? <i class="bi bi-plus-lg"></i></summary>
+          <div class="faq-answer">Yes. In your creator dashboard, open <strong>My Affiliate Links</strong>, paste the affiliate link from Amazon Associates, Etsy, Booking.com or any brand, and Affilink gives you a short shareable link that counts clicks and sends visitors to the brand with your tracking intact. The brand pays you directly — Affilink never takes a cut.</div>
+        </details>
+        <details class="faq-item">
+          <summary>What commission types are supported? <i class="bi bi-plus-lg"></i></summary>
+          <div class="faq-answer">Percentage revenue share, recurring commission, fixed CPA bounties and tiered structures. You can filter by any of them in the directory.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Can I save programs and track applications? <i class="bi bi-plus-lg"></i></summary>
+          <div class="faq-answer">Yes. Create a creator account to save programs, log applications and update their status (pending, approved, rejected or withdrawn) as you hear back from brands.</div>
+        </details>
+        <details class="faq-item">
+          <summary>How do I list my brand's program? <i class="bi bi-plus-lg"></i></summary>
+          <div class="faq-answer">Create a brand account, submit your program details, and our team reviews it. Approved listings become publicly visible in the directory and your dashboard records views and outbound clicks.</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section-sm">
+    <div class="container">
+      <div class="cta-band" data-reveal>
+        <div>
+          <span class="eyebrow" style="color:#b9b2ff">Start free</span>
+          <h2>Build your next revenue stream.</h2>
+          <p>Save programs, compare payout terms and keep your applications organised in one place.</p>
+        </div>
+        <div class="flex gap-2 wrap">
+          <a class="btn btn-primary btn-lg" href="/register">Create a free account</a>
+          <a class="btn btn-ghost btn-lg" href="/programs">Browse programs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- include:footer -->
+<script type="module" src="/js/home.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<header class="site-header" data-header>
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label="Affilink home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 15l6-6"></path>
+          <path d="M10.5 5.5a4.95 4.95 0 1 1 7 7l-1.5 1.5"></path>
+          <path d="M13.5 18.5a4.95 4.95 0 1 1-7-7L8 10"></path>
+        </svg>
+      </span>
+      <span class="brand-name">Affilink</span>
+    </a>
+
+    <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
+      <a href="/programs" data-nav="programs">Explore Programs</a>
+      <a href="/categories" data-nav="categories">Categories</a>
+      <a href="/for-brands" data-nav="brands">For Brands</a>
+      <a href="/resources" data-nav="resources">Resources</a>
+      <a class="nav-cta" href="{{SUBMIT_HREF}}">Submit a Program</a>
+      {{AFFILIATE_LINKS_NAV}}
+    </nav>
+
+    <div class="header-actions">
+      <div class="auth-area">{{AUTH_AREA}}</div>
+      <a class="btn btn-primary btn-sm header-cta" href="{{SUBMIT_HREF}}">Submit a Program</a>
+      {{AFFILIATE_LINKS_CTA}}
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav" data-nav-toggle>
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>

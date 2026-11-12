@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<!-- include:head -->
+</head>
+<body class="{{BODY_CLASS}}">
+<a class="skip-link" href="#main">Skip to content</a>
+<!-- include:header -->
+
+<main id="main">
+  <div class="dash-shell">
+    <aside class="dash-sidebar" aria-label="Brand dashboard navigation">
+      <div class="side-user">
+        <span class="avatar" data-user-avatar>…</span>
+        <div style="min-width:0">
+          <div class="name" data-user-name>Brand account</div>
+          <div class="role">Brand account</div>
+        </div>
+      </div>
+      <nav class="side-nav">
+        <span class="label">Workspace</span>
+        <a class="side-link" href="/brand/dashboard"><i class="bi bi-grid-1x2"></i>Overview</a>
+        <a class="side-link" href="/brand/dashboard?programs"><i class="bi bi-list-check"></i>My Programs</a>
+        <a class="side-link is-active" href="/brand/programs/new"><i class="bi bi-plus-square"></i>Add New Program</a>
+        <a class="side-link" href="/brand/dashboard?analytics"><i class="bi bi-graph-up"></i>Listing Analytics</a>
+        <span class="label">Account</span>
+        <a class="side-link" href="/brand/dashboard?settings"><i class="bi bi-gear"></i>Account Settings</a>
+        <a class="side-link" href="#" data-logout><i class="bi bi-box-arrow-right"></i>Log out</a>
+      </nav>
+      <div class="side-foot">
+        <span class="demo-badge"><span class="dot"></span> Demo environment</span>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <div class="dash-head">
+        <div>
+          <h1 id="formTitle">Add a new program</h1>
+          <p id="formSub">Submit your affiliate program. It stays in review until an administrator approves it.</p>
+        </div>
+        <div class="actions">
+          <a class="btn btn-ghost btn-sm" href="/brand/dashboard?programs"><i class="bi bi-arrow-left"></i> Back to programs</a>
+        </div>
+      </div>
+
+      <div class="alert alert-info" id="editNotice" hidden>
+        <i class="bi bi-info-circle"></i>
+        <span>You're editing an existing listing. Saving changes resubmits it for review.</span>
+      </div>
+      <div class="alert alert-danger" data-form-alert hidden role="alert"></div>
+      <div class="alert alert-success" id="submitSuccess" hidden>
+        <i class="bi bi-check-circle"></i>
+        <span id="submitSuccessText">Program submitted for review.</span>
+      </div>
+
+      <div class="program-form-layout">
+        <form id="programForm" class="panel" novalidate>
+          <div class="form-section">
+            <h3>Brand &amp; positioning</h3>
+            <p class="desc">How your program appears in the directory.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label for="brandName">Brand name</label>
+                <input id="brandName" name="brandName" required placeholder="Northwind Labs">
+                <div class="error"></div>
+              </div>
+              <div class="field">
+                <label for="title">Program title</label>
+                <input id="title" name="title" required placeholder="Northwind Labs Affiliate Program">
+                <div class="error"></div>
+              </div>
+              <div class="field">
+                <label for="logoUrl">Brand logo URL</label>
+                <input id="logoUrl" name="logoUrl" placeholder="https://… or leave blank for a generated monogram">
+                <div class="error"></div>
+              </div>
+              <div class="field">
+                <label for="category">Category</label>
+                <select id="category" name="category" required>
+                  <option value="">Select a category…</option>
+                </select>
+                <div class="error"></div>
+              </div>
+              <div class="field full">
+                <label for="description">Program description</label>
+                <textarea id="description" name="description" required placeholder="What does the product do, who is it for, and why would a creator promote it?" maxlength="2000"></textarea>
+                <p class="hint">Minimum 30 characters. 2–4 sentences works best.</p>
+                <div class="error"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Links</h3>
+            <p class="desc">Where creators learn more and where they apply.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label for="websiteUrl">Brand website</label>
+                <input id="websiteUrl" name="websiteUrl" type="url" required placeholder="https://brand.com">
+                <div class="error"></div>
+              </div>
+              <div class="field">
+                <label for="signupUrl">Affiliate signup URL</label>
+                <input id="signupUrl" name="signupUrl" type="url" required placeholder="https://brand.com/affiliates">
+                <div class="error"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Commission &amp; payout</h3>
+            <p class="desc">Be precise — creators compare these values directly.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label for="commissionType">Commission type</label>
+                <select id="commissionType" name="commissionType" required>
+                  <option value="percentage">Percentage (revenue share)</option>
+                  <option value="recurring">Recurring commission</option>
+                  <option value="fixed">Fixed amount (CPA)</option>
+                  <option value="tiered">Tiered structure</option>
+                </select>
+                <div class="error"></div>
+              </div>
+              <div class="field">
+                <label for="commissionValue">Commission value <span class="text-muted">(percent or USD)</span></label>
+                <input id="commissionValue" name="commissionValue" type="number" min="0.01" step="0.01" required placeholder="30">
+                <div class="error"></div>
+              </div>
+              <div class="field full">
+                <label for="commissionLabel">Display label <span class="text-muted">(optional)</span></label>
+                <input id="commissionLabel" name="commissionLabel" placeholder="e.g. 30% recurring for 12 months">
+                <p class="hint">Leave blank to generate a label from the type and value.</p>
+                <div class="error"></div>
+              </div>
+              <div class="field">
+                <label for="cookieDays">Cookie duration (days)</label>
+                <input id="cookieDays" name="cookieDays" type="number" min="1" max="730" required placeholder="30">
+                <div class="error"></div>
+              </div>
+              <div class="field">
+                <label for="minPayout">Minimum payout (USD)</label>
+                <input id="minPayout" name="minPayout" type="number" min="0" step="0.01" required placeholder="50">
+                <div class="error"></div>
+              </div>
+              <div class="field">
+                <label for="paymentFrequency">Payment frequency</label>
+                <select id="paymentFrequency" name="paymentFrequency">
+                  <option>Monthly</option>
+                  <option>Bi-weekly</option>
+                  <option>Weekly</option>
+                  <option>Quarterly</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="network">Affiliate network</label>
+                <select id="network" name="network" required>
+                  <option value="">Select a network…</option>
+                  <option>In-house</option>
+                  <option>Impact</option>
+                  <option>PartnerStack</option>
+                  <option>ShareASale</option>
+                  <option>CJ Affiliate</option>
+                  <option>Awin</option>
+                  <option>Rakuten</option>
+                  <option>ClickBank</option>
+                  <option>Refersion</option>
+                  <option>FirstPromoter</option>
+                </select>
+                <div class="error"></div>
+              </div>
+              <div class="field full">
+                <label>Payment methods</label>
+                <div class="check-grid">
+                  <label><input type="checkbox" name="paymentMethods[]" value="PayPal"> PayPal</label>
+                  <label><input type="checkbox" name="paymentMethods[]" value="Bank transfer"> Bank transfer</label>
+                  <label><input type="checkbox" name="paymentMethods[]" value="Stripe"> Stripe</label>
+                  <label><input type="checkbox" name="paymentMethods[]" value="Wire"> Wire</label>
+                  <label><input type="checkbox" name="paymentMethods[]" value="Crypto"> Crypto</label>
+                </div>
+                <div class="error"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Eligibility &amp; requirements</h3>
+            <p class="desc">Set expectations before creators apply.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label for="eligibleCountries">Eligible countries</label>
+                <input id="eligibleCountries" name="eligibleCountries" list="countrySuggestions" placeholder="Worldwide">
+                <datalist id="countrySuggestions">
+                  <option value="Worldwide"></option>
+                  <option value="United States"></option>
+                  <option value="United Kingdom"></option>
+                  <option value="Europe"></option>
+                  <option value="Selected countries"></option>
+                </datalist>
+                <div class="error"></div>
+              </div>
+              <div class="field">
+                <label for="contactEmail">Contact email</label>
+                <input id="contactEmail" name="contactEmail" type="email" required placeholder="partners@brand.com">
+                <div class="error"></div>
+              </div>
+              <div class="field full">
+                <label>Accepted promotional methods</label>
+                <div class="check-grid">
+                  <label><input type="checkbox" name="promoMethods[]" value="Content / blog"> Content / blog</label>
+                  <label><input type="checkbox" name="promoMethods[]" value="YouTube"> YouTube</label>
+                  <label><input type="checkbox" name="promoMethods[]" value="Newsletter"> Newsletter</label>
+                  <label><input type="checkbox" name="promoMethods[]" value="Social media"> Social media</label>
+                  <label><input type="checkbox" name="promoMethods[]" value="Podcast"> Podcast</label>
+                  <label><input type="checkbox" name="promoMethods[]" value="Live streams"> Live streams</label>
+                  <label><input type="checkbox" name="promoMethods[]" value="Courses"> Courses</label>
+                  <label><input type="checkbox" name="promoMethods[]" value="Coupons"> Coupons</label>
+                </div>
+                <div class="error"></div>
+              </div>
+              <div class="field full">
+                <label for="requirements">Program requirements</label>
+                <textarea id="requirements" name="requirements" required placeholder="Audience fit, minimum traffic, brand-bidding rules, approval criteria…"></textarea>
+                <div class="error"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit" id="submitBtn">Submit for review</button>
+            <a class="btn btn-ghost" href="/brand/dashboard?programs">Cancel</a>
+          </div>
+        </form>
+
+        <aside>
+          <div class="panel program-preview-card">
+            <div class="panel-head"><h2>Listing preview</h2></div>
+            <div class="program-card" style="padding:16px;border-radius:var(--radius)">
+              <div class="program-card-head" style="margin-bottom:10px">
+                <img class="program-logo" id="previewLogo" src="/logos/affilink.svg" alt="" width="46" height="46">
+                <div class="program-card-title">
+                  <div class="program-brand" id="previewBrand">Your brand</div>
+                  <div class="program-cat" id="previewCategory">Category</div>
+                </div>
+              </div>
+              <div class="program-title" id="previewTitle" style="font-size:.95rem">Program title</div>
+              <p class="program-desc" id="previewDesc" style="margin-bottom:12px">Your description will appear here.</p>
+              <div class="program-meta" style="padding-top:10px">
+                <div class="meta-item"><div class="meta-label">Commission</div><div class="meta-value accent" id="previewCommission">—</div></div>
+                <div class="meta-item"><div class="meta-label">Cookie</div><div class="meta-value" id="previewCookie">—</div></div>
+                <div class="meta-item"><div class="meta-label">Network</div><div class="meta-value" id="previewNetwork">—</div></div>
+                <div class="meta-item"><div class="meta-label">Payment</div><div class="meta-value" id="previewPayment">—</div></div>
+              </div>
+            </div>
+            <ul class="checklist">
+              <li><i class="bi bi-check2-circle"></i> Pending review after submission</li>
+              <li><i class="bi bi-check2-circle"></i> Public once an admin approves</li>
+              <li><i class="bi bi-check2-circle"></i> Application clicks go to your signup URL</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- include:footer -->
+<script type="module" src="/js/program-form.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<!-- include:head -->
+</head>
+<body class="{{BODY_CLASS}}">
+<a class="skip-link" href="#main">Skip to content</a>
+<!-- include:header -->
+
+<main id="main">
+  <section class="page-head">
+    <div class="container">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span class="sep">/</span><span>Contact</span></nav>
+      <h1>Talk to us.</h1>
+      <p>Questions about a listing, your account or a broken application link? Send a message and we'll get back to you.</p>
+    </div>
+  </section>
+
+  <div class="container" style="padding:40px 0 80px">
+    <div class="contact-layout">
+      <section class="panel">
+        <div class="panel-head"><h2>Send a message</h2></div>
+        <div class="alert alert-success" id="contactSuccess" hidden>
+          <i class="bi bi-check-circle"></i><span>Thanks — your message has been received. In this demo, messages are visible to administrators in the admin panel.</span>
+        </div>
+        <div class="alert alert-danger" data-form-alert hidden role="alert"></div>
+        <form id="contactForm" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label for="name">Your name</label>
+              <input id="name" name="name" type="text" autocomplete="name" required placeholder="Maya Chen">
+              <div class="error"></div>
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+              <div class="error"></div>
+            </div>
+            <div class="field full">
+              <label for="topic">What is this about?</label>
+              <select id="topic" name="topic">
+                <option>General question</option>
+                <option>My account</option>
+                <option>Program listing</option>
+                <option>Report a broken link</option>
+                <option>Privacy request</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" required placeholder="Tell us what's going on…" maxlength="2000"></textarea>
+              <div class="error"></div>
+            </div>
+          </div>
+          <button class="btn btn-primary" type="submit">Send message</button>
+        </form>
+      </section>
+
+      <aside>
+        <div class="panel">
+          <div class="panel-head"><h2>Other ways to reach us</h2></div>
+          <div class="mini-spec"><span class="k">Support</span><span class="v">support@affilink.demo</span></div>
+          <div class="mini-spec"><span class="k">Partnerships</span><span class="v">partners@affilink.demo</span></div>
+          <div class="mini-spec"><span class="k">Response time</span><span class="v">2 business days</span></div>
+          <p class="text-xs text-muted mt-2 mb-0">Demo addresses — no external email delivery is configured in this environment.</p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Quick links</h2></div>
+          <div class="dash-list">
+            <a class="dash-list-item" href="/programs"><i class="bi bi-grid"></i><div class="info"><div class="t">Browse programs</div><div class="s">Search the full directory</div></div><i class="bi bi-arrow-right arrow"></i></a>
+            <a class="dash-list-item" href="/for-brands"><i class="bi bi-buildings"></i><div class="info"><div class="t">List a program</div><div class="s">Brand submission workflow</div></div><i class="bi bi-arrow-right arrow"></i></a>
+            <a class="dash-list-item" href="/privacy"><i class="bi bi-shield-lock"></i><div class="info"><div class="t">Privacy policy</div><div class="s">How we handle data</div></div><i class="bi bi-arrow-right arrow"></i></a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<!-- include:footer -->
+<script type="module" src="/js/contact.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+  <link rel="canonical" href="{{CANONICAL}}">
+  <meta name="robots" content="{{ROBOTS}}">
+  <meta property="og:title" content="{{TITLE}}">
+  <meta property="og:description" content="{{DESCRIPTION}}">
+  <meta property="og:url" content="{{CANONICAL}}">
+  <meta property="og:type" content="{{OG_TYPE}}">
+  <meta property="og:image" content="{{OG_IMAGE}}">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  {{EXTRA_HEAD}}
+</head>
+<body class="{{BODY_CLASS}}">
+<a class="skip-link" href="#main">Skip to content</a>
+<!-- include:header -->
+
+<main id="main">
+  <div class="auth-layout">
+    <aside class="auth-side">
+      <div>
+        <a class="brand" href="/" style="margin-bottom:48px">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 15l6-6"></path><path d="M10.5 5.5a4.95 4.95 0 1 1 7 7l-1.5 1.5"></path><path d="M13.5 18.5a4.95 4.95 0 1 1-7-7L8 10"></path>
+            </svg>
+          </span>
+          <span class="brand-name">Affilink</span>
+        </a>
+        <h2>Every program you're considering, in one place.</h2>
+        <p class="mt-3">Save programs, compare payout terms without ten browser tabs, and keep your applications organised.</p>
+      </div>
+      <div class="quote">
+        “The comparison data is the part I use most. Network, payout and requirements in one view saves me hours.”
+        <div class="who">Sample testimonial · demo data</div>
+      </div>
+    </aside>
+
+    <div class="auth-main">
+      <div class="auth-card">
+        <h1>Welcome back</h1>
+        <p class="lead">Sign in to your creator or brand account.</p>
+
+        <div class="alert alert-danger" data-form-alert hidden role="alert"></div>
+
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email" autocomplete="email" required placeholder="you@example.com">
+            <div class="error"></div>
+          </div>
+          <div class="field">
+            <label for="password" class="flex items-center justify-between" style="display:flex">
+              <span>Password</span>
+              <a href="/forgot-password" style="font-size:.8rem;color:var(--accent);font-weight:600">Forgot password?</a>
+            </label>
+            <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="••••••••">
+            <div class="error"></div>
+          </div>
+          <button class="btn btn-primary btn-block btn-lg" type="submit">Sign in</button>
+        </form>
+
+        <div class="auth-sep">or use a demo account</div>
+        <div class="demo-accounts">
+          <h3>Demo accounts</h3>
+          <div class="demo-account">
+            <span>Creator · <code>creator@affilink.demo</code></span>
+            <button type="button" data-fill="creator@affilink.demo|Creator123!">Use</button>
+          </div>
+          <div class="demo-account">
+            <span>Brand · <code>brand@affilink.demo</code></span>
+            <button type="button" data-fill="brand@affilink.demo|Brand123!">Use</button>
+          </div>
+          <div class="demo-account">
+            <span>Admin · <code>admin@affilink.demo</code></span>
+            <button type="button" data-fill="admin@affilink.demo|Admin123!">Use</button>
+          </div>
+        </div>
+
+        <p class="auth-alt">New to Affilink? <a href="/register">Create an account</a></p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- include:footer -->
+<script type="module" src="/js/auth-page.js"></script>
+</body>
+</html>

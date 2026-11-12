@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<!-- include:head -->
+</head>
+<body class="{{BODY_CLASS}}">
+<a class="skip-link" href="#main">Skip to content</a>
+<!-- include:header -->
+
+<main id="main">
+  <div class="dash-shell">
+    <aside class="dash-sidebar" aria-label="Admin navigation">
+      <div class="side-user">
+        <span class="avatar" data-user-avatar>A</span>
+        <div style="min-width:0">
+          <div class="name" data-user-name>Administrator</div>
+          <div class="role">Admin</div>
+        </div>
+      </div>
+      <nav class="side-nav">
+        <span class="label">Platform</span>
+        <button class="side-link is-active" type="button" data-view="overview"><i class="bi bi-speedometer2"></i>Overview</button>
+        <button class="side-link" type="button" data-view="programs"><i class="bi bi-collection"></i>Programs<span class="count" data-count-pending>0</span></button>
+        <button class="side-link" type="button" data-view="users"><i class="bi bi-people"></i>Users</button>
+        <button class="side-link" type="button" data-view="categories"><i class="bi bi-tags"></i>Categories</button>
+        <span class="label">Content</span>
+        <button class="side-link" type="button" data-view="testimonials"><i class="bi bi-chat-quote"></i>Testimonials</button>
+        <button class="side-link" type="button" data-view="reviews"><i class="bi bi-star"></i>Reviews</button>
+        <button class="side-link" type="button" data-view="content"><i class="bi bi-layout-text-window"></i>Homepage content</button>
+        <span class="label">Insights</span>
+        <button class="side-link" type="button" data-view="analytics"><i class="bi bi-graph-up-arrow"></i>Analytics</button>
+        <button class="side-link" type="button" data-view="messages"><i class="bi bi-envelope"></i>Messages</button>
+        <a class="side-link" href="#" data-logout><i class="bi bi-box-arrow-right"></i>Log out</a>
+      </nav>
+      <div class="side-foot">
+        <span class="demo-badge"><span class="dot"></span> Admin access</span>
+        <p class="text-xs text-muted mt-2 mb-0">Role-protected server-side.</p>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <div class="dash-head">
+        <div>
+          <h1 data-page-title>Overview</h1>
+          <p data-page-sub>Platform health, submissions and directory activity.</p>
+        </div>
+        <div class="actions">
+          <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> View site</a>
+          <button class="btn btn-primary btn-sm" type="button" data-view="programs"><i class="bi bi-inbox"></i> Review queue</button>
+        </div>
+      </div>
+
+      <!-- Overview -->
+      <section class="dash-view" data-view-panel="overview">
+        <div class="stat-cards">
+          <div class="stat-card"><div class="top"><span class="label">Total users</span><span class="icon"><i class="bi bi-people"></i></span></div><div class="value" data-count="users">—</div><div class="sub"><span data-count="creators">0</span> creators · <span data-count="brands">0</span> brands</div></div>
+          <div class="stat-card"><div class="top"><span class="label">Affiliate programs</span><span class="icon"><i class="bi bi-collection"></i></span></div><div class="value" data-count="programs">—</div><div class="sub"><span data-count="approved">0</span> approved · <span data-count="pending">0</span> pending</div></div>
+          <div class="stat-card"><div class="top"><span class="label">Listing views</span><span class="icon"><i class="bi bi-eye"></i></span></div><div class="value" data-count="views">—</div><div class="sub">Across all listings</div></div>
+          <div class="stat-card"><div class="top"><span class="label">Outbound clicks</span><span class="icon"><i class="bi bi-box-arrow-up-right"></i></span></div><div class="value" data-count="clicks">—</div><div class="sub"><span data-count="applications">0</span> tracked applications</div></div>
+        </div>
+
+        <div class="dash-columns" style="margin-bottom:20px">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Platform activity · 30 days</h2>
+              <span class="badge badge-outline">Views</span>
+            </div>
+            <div id="overviewChart"><div class="skeleton" style="height:200px"></div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Pending submissions</h2><button class="link" type="button" data-view="programs">Open queue</button></div>
+            <div id="pendingPreview"><div class="skeleton" style="height:64px"></div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Top programs by views</h2><button class="link" type="button" data-view="analytics">Full analytics</button></div>
+          <div id="topPrograms"><div class="skeleton" style="height:120px"></div></div>
+        </div>
+      </section>
+
+      <!-- Programs -->
+      <section class="dash-view" data-view-panel="programs" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Manage affiliate programs</h2>
+            <div class="flex items-center gap-2 wrap">
+              <button class="btn btn-ghost btn-sm" type="button" data-status-filter="">All</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-status-filter="pending">Pending</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-status-filter="approved">Approved</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-status-filter="rejected">Rejected</button>
+            </div>
+          </div>
+          <div class="filter-toolbar">
+            <div class="directory-search" style="max-width:340px">
+              <i class="bi bi-search"></i>
+              <input class="control" id="programSearch" type="search" placeholder="Search by brand, title or owner email…">
+            </div>
+            <span class="text-sm text-muted" id="programCountLabel"></span>
+          </div>
+          <div id="adminPrograms" aria-live="polite"><div class="skeleton" style="height:160px"></div></div>
+          <nav class="pagination" id="adminPagination" aria-label="Program pagination"></nav>
+        </div>
+      </section>
+
+      <!-- Users -->
+      <section class="dash-view" data-view-panel="users" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Users</h2>
+            <div class="flex items-center gap-2 wrap">
+              <select class="control" id="userRoleFilter" style="font-size:.84rem;padding:7px 30px 7px 10px;max-width:170px">
+                <option value="">All roles</option>
+                <option value="creator">Creators</option>
+                <option value="brand">Brands</option>
+                <option value="admin">Admins</option>
+              </select>
+            </div>
+          </div>
+          <div class="filter-toolbar">
+            <div class="directory-search" style="max-width:340px">
+              <i class="bi bi-search"></i>
+              <input class="control" id="userSearch" type="search" placeholder="Search by name or email…">
+            </div>
+          </div>
+          <div id="adminUsers" aria-live="polite"><div class="skeleton" style="height:160px"></div></div>
+        </div>
+      </section>
+
+      <!-- Categories -->
+      <section class="dash-view" data-view-panel="categories" hidden>
+        <div class="dash-columns">
+          <div class="panel">
+            <div class="panel-head"><h2>Categories</h2><button class="btn btn-primary btn-sm" type="button" data-new-category><i class="bi bi-plus-lg"></i> Add category</button></div>
+            <div id="adminCategories"><div class="skeleton" style="height:160px"></div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Category guidelines</h2></div>
+            <p class="text-sm text-muted">Categories drive the directory filters and homepage tiles. Deleting a category is blocked while programs are still assigned to it.</p>
+            <ul class="checklist">
+              <li><i class="bi bi-check2-circle"></i> Use a short, stable slug</li>
+              <li><i class="bi bi-check2-circle"></i> Pick a Bootstrap Icons class</li>
+              <li><i class="bi bi-check2-circle"></i> Give each category a distinct accent colour</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Testimonials -->
+      <section class="dash-view" data-view-panel="testimonials" hidden>
+        <div class="panel">
+          <div class="panel-head"><h2>Testimonials</h2><button class="btn btn-primary btn-sm" type="button" data-new-testimonial><i class="bi bi-plus-lg"></i> Add testimonial</button></div>
+          <div class="alert alert-info"><i class="bi bi-info-circle"></i><span>Only published testimonials appear on the homepage. These are demo testimonials, not real customer reviews.</span></div>
+          <div id="adminTestimonials"><div class="skeleton" style="height:140px"></div></div>
+        </div>
+      </section>
+
+      <!-- Reviews -->
+      <section class="dash-view" data-view-panel="reviews" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Creator reviews</h2>
+            <select class="control" id="reviewStatusFilter" style="font-size:.84rem;padding:7px 30px 7px 10px;max-width:180px">
+              <option value="pending">Pending</option>
+              <option value="">All statuses</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+          <div id="adminReviews"><div class="skeleton" style="height:120px"></div></div>
+        </div>
+      </section>
+
+      <!-- Homepage content -->
+      <section class="dash-view" data-view-panel="content" hidden>
+        <div class="panel">
+          <div class="panel-head"><h2>Homepage content</h2></div>
+          <p class="text-sm text-muted">These strings are rendered on the homepage and the For Brands page. Changes are live immediately.</p>
+          <div class="alert alert-danger" data-form-alert hidden role="alert"></div>
+          <form id="contentForm" novalidate>
+            <div class="field"><label for="hero_title">Hero headline</label><input id="hero_title" name="hero_title"><div class="error"></div></div>
+            <div class="field"><label for="hero_subtitle">Hero subheadline</label><textarea id="hero_subtitle" name="hero_subtitle" style="min-height:90px"></textarea><div class="error"></div></div>
+            <div class="field"><label for="brand_headline">For-brands headline</label><input id="brand_headline" name="brand_headline"><div class="error"></div></div>
+            <div class="field"><label for="brand_copy">For-brands copy</label><textarea id="brand_copy" name="brand_copy" style="min-height:90px"></textarea><div class="error"></div></div>
+            <div class="field"><label for="announcement">Demo notice</label><input id="announcement" name="announcement"><div class="error"></div></div>
+            <button class="btn btn-primary" type="submit">Save content</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Analytics -->
+      <section class="dash-view" data-view-panel="analytics" hidden>
+        <div class="stat-cards">
+          <div class="stat-card"><div class="label">Views</div><div class="value" data-analytics-total="views">—</div></div>
+          <div class="stat-card"><div class="label">Clicks</div><div class="value" data-analytics-total="clicks">—</div></div>
+          <div class="stat-card"><div class="label">Users</div><div class="value" data-analytics-total="users">—</div></div>
+          <div class="stat-card"><div class="label">Programs</div><div class="value" data-analytics-total="programs">—</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Traffic · last 30 days</h2></div>
+          <div id="trafficChart"><div class="skeleton" style="height:220px"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Signups &amp; submissions</h2></div>
+          <div id="growthChart"><div class="skeleton" style="height:220px"></div></div>
+        </div>
+        <div class="dash-columns">
+          <div class="panel">
+            <div class="panel-head"><h2>Top categories</h2></div>
+            <div id="topCategories"><div class="skeleton" style="height:120px"></div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Networks</h2></div>
+            <div id="networkTable"><div class="skeleton" style="height:120px"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Messages -->
+      <section class="dash-view" data-view-panel="messages" hidden>
+        <div class="panel">
+          <div class="panel-head"><h2>Contact messages</h2><span class="badge badge-outline" id="messageCount">0</span></div>
+          <div id="adminMessages"><div class="skeleton" style="height:120px"></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- Program edit modal -->
+<div class="modal fade" id="programModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title">Edit listing</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <div class="modal-body">
+        <div class="alert alert-danger" data-form-alert hidden role="alert"></div>
+        <input type="hidden" id="apId">
+        <div class="form-grid">
+          <div class="field full"><label for="apTitle">Program title</label><input id="apTitle"><div class="error"></div></div>
+          <div class="field full"><label for="apDescription">Description</label><textarea id="apDescription"></textarea><div class="error"></div></div>
+          <div class="field"><label for="apCategory">Category</label><select id="apCategory"></select></div>
+          <div class="field"><label for="apNetwork">Network</label><input id="apNetwork"></div>
+          <div class="field"><label for="apCommission">Commission label</label><input id="apCommission"></div>
+          <div class="field"><label for="apCookie">Cookie days</label><input id="apCookie" type="number" min="1" max="730"></div>
+          <div class="field"><label for="apStatus">Status</label>
+            <select id="apStatus"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+          </div>
+          <div class="field"><label class="filter-option" style="margin-top:26px"><input type="checkbox" id="apFeatured"> Featured on homepage</label></div>
+          <div class="field full"><label for="apReason">Rejection reason <span class="text-muted">(required when rejecting)</span></label><input id="apReason" placeholder="What should the brand fix?"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" id="apSave">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Category modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title" id="categoryModalTitle">Add category</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <div class="modal-body">
+        <div class="alert alert-danger" data-form-alert hidden role="alert"></div>
+        <input type="hidden" id="catId">
+        <div class="field"><label for="catName">Name</label><input id="catName" placeholder="Productivity"><div class="error"></div></div>
+        <div class="field"><label for="catDescription">Description</label><input id="catDescription" placeholder="Tools that help teams get organised"><div class="error"></div></div>
+        <div class="form-grid">
+          <div class="field"><label for="catIcon">Icon class</label><input id="catIcon" value="bi-grid" placeholder="bi-grid"><p class="hint">Any Bootstrap Icons class.</p></div>
+          <div class="field"><label for="catAccent">Accent colour</label><input id="catAccent" type="color" value="#6457f9" style="height:44px;padding:4px"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" id="catSave">Save category</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Testimonial modal -->
+<div class="modal fade" id="testimonialModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title" id="testimonialModalTitle">Add testimonial</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <div class="modal-body">
+        <div class="alert alert-danger" data-form-alert hidden role="alert"></div>
+        <input type="hidden" id="tId">
+        <div class="form-grid">
+          <div class="field"><label for="tName">Name</label><input id="tName"><div class="error"></div></div>
+          <div class="field"><label for="tRole">Role</label><input id="tRole" placeholder="Affiliate publisher"><div class="error"></div></div>
+          <div class="field full"><label for="tQuote">Quote</label><textarea id="tQuote"></textarea><div class="error"></div></div>
+          <div class="field"><label for="tRating">Rating</label><select id="tRating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></div>
+          <div class="field"><label for="tStatus">Visibility</label><select id="tStatus"><option value="published">Published</option><option value="hidden">Hidden</option></select></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" id="tSave">Save testimonial</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- include:footer -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+<script type="module" src="/js/admin-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+  <link rel="canonical" href="{{CANONICAL}}">
+  <meta name="robots" content="{{ROBOTS}}">
+  <meta property="og:title" content="{{TITLE}}">
+  <meta property="og:description" content="{{DESCRIPTION}}">
+  <meta property="og:url" content="{{CANONICAL}}">
+  <meta property="og:type" content="{{OG_TYPE}}">
+  <meta property="og:image" content="{{OG_IMAGE}}">
+  <meta property="og:site_name" content="Affilink">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  {{EXTRA_HEAD}}
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+</head>
+<body class="{{BODY_CLASS}}">
+<a class="skip-link" href="#main">Skip to content</a>
+<!-- include:header -->
+
+<main id="main">
+  <div class="container">
+    <nav class="breadcrumbs" style="padding-top:24px" aria-label="Breadcrumb" id="breadcrumbs">
+      <a href="/">Home</a><span class="sep">/</span><a href="/programs">Programs</a><span class="sep">/</span><span data-crumb>Loading…</span>
+    </nav>
+
+    <div id="detailRoot" aria-busy="true">
+      <div class="detail-layout">
+        <div>
+          <div class="skeleton" style="height:120px;margin-bottom:20px"></div>
+          <div class="skeleton" style="height:220px"></div>
+        </div>
+        <div class="skeleton" style="height:320px"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- include:footer -->
+<script type="module" src="/js/program-details.js"></script>
+</body>
+</html>
