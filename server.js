@@ -260,7 +260,7 @@ app.get('/privacy', (req, res) =>
   renderPage(res, 'privacy.html', { title: 'Privacy Policy', description: 'How Affilink handles account, profile and analytics data.', canonical: '/privacy' })
 );
 app.get('/terms', (req, res) =>
-  renderPage(res, 'terms.html', { title: 'Terms & Conditions', description: 'The terms that apply to using the Affilink demo platform.', canonical: '/terms' })
+  renderPage(res, 'terms.html', { title: 'Terms & Conditions', description: 'The terms that apply to using the Affilink platform.', canonical: '/terms' })
 );
 
 app.get('/login', (req, res) => {
