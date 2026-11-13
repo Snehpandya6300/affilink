@@ -174,7 +174,7 @@ export function programCard(p, { saved = false } = {}) {
     <div class="program-card-head">
       <img class="program-logo" src="${escapeHtml(p.logoUrl || '/logos/affilink.svg')}" alt="${escapeHtml(p.brandName)} logo" width="46" height="46" loading="lazy">
       <div class="program-card-title">
-        <a class="program-brand" href="/programs/${escapeHtml(p.slug)}">${escapeHtml(p.brandName)}${p.isDemo ? '<span class="badge badge-outline" style="margin-left:6px">Demo</span>' : '<i class="bi bi-patch-check-fill verify" title="Terms checked against the brand page"></i>'}</a>
+        <a class="program-brand" href="/programs/${escapeHtml(p.slug)}">${escapeHtml(p.brandName)}${p.isDemo ? '' : '<i class="bi bi-patch-check-fill verify" title="Terms checked against the brand page"></i>'}</a>
         <span class="program-cat"><i class="bi ${escapeHtml(p.category?.icon || 'bi-grid')}"></i>${escapeHtml(p.category?.name || 'General')}${p.featured ? ' · <span class="text-accent fw-600">Featured</span>' : ''}</span>
       </div>
       <button class="save-btn ${isSaved ? 'is-saved' : ''}" type="button" data-save="${p.id}"

@@ -99,7 +99,7 @@ function render(p, me) {
       <div class="disclaimer">
         <i class="bi bi-info-circle"></i>
         ${p.isDemo
-          ? '<span><strong>Demo listing.</strong> This brand and its numbers are sample data for the brand dashboard, not a real partner. Applications are handled by the brand’s official affiliate program, not Affilink.</span>'
+          ? '<span><strong>Terms not yet checked.</strong> Commission, cookie and payout details for this listing have not been verified against the brand page yet. Applications are handled by the brand’s official affiliate program, not Affilink.</span>'
           : `<span><strong>Verified ${formatDate(p.verifiedAt)}.</strong> Commission, cookie and payout details were checked against ${p.sourceUrl ? `<a href="${escapeHtml(p.sourceUrl)}" target="_blank" rel="noopener noreferrer nofollow">the brand's official program page</a>` : "the brand's official program page"}. Terms change without notice — confirm them before you start promoting. Applications are handled by the brand, not Affilink.</span>`}
       </div>
 

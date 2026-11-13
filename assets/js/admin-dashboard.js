@@ -141,10 +141,10 @@ async function loadPrograms() {
           (p) => `<tr>
             <td><div class="cell-main">
               <img class="program-logo" src="${escapeHtml(p.logoUrl)}" alt="" width="34" height="34" style="width:34px;height:34px;border-radius:9px">
-              <div><div class="t">${escapeHtml(p.brandName)}</div><div class="s">${escapeHtml(p.category?.name || 'Uncategorised')}${p.featured ? ' · featured' : ''}${p.isDemo ? ' · demo' : ''}</div></div>
+              <div><div class="t">${escapeHtml(p.brandName)}</div><div class="s">${escapeHtml(p.category?.name || 'Uncategorised')}${p.featured ? ' · featured' : ''}</div></div>
             </div></td>
             <td><span class="badge ${p.status === 'approved' ? 'badge-success' : p.status === 'pending' ? 'badge-warning' : 'badge-danger'}">${p.status}</span></td>
-            <td class="text-xs">${escapeHtml(p.ownerEmail || 'Platform demo')}</td>
+            <td class="text-xs">${escapeHtml(p.ownerEmail || 'Platform')}</td>
             <td>${escapeHtml(p.commissionLabel)}</td>
             <td>${formatNumber(p.viewCount)}</td>
             <td class="text-xs text-muted">${formatDate(p.createdAt)}</td>
