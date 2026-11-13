@@ -64,6 +64,15 @@ if (registerForm) {
   roleInputs.forEach((r) => r.addEventListener('change', syncRole));
   syncRole();
 
+  const termsInput = registerForm.elements.terms;
+  termsInput.addEventListener('change', () => {
+    const field = termsInput.closest('.field');
+    if (!field) return;
+    field.classList.remove('has-error');
+    const err = field.querySelector('.error');
+    if (err) err.textContent = '';
+  });
+
   registerForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     clearFormErrors(registerForm);
