@@ -628,11 +628,6 @@ input[type='checkbox'], input[type='radio'] { accent-color: var(--accent); width
 .role-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-ring); }
 .auth-sep { display: flex; align-items: center; gap: 12px; color: var(--muted-soft); font-size: 0.76rem; margin: 22px 0; }
 .auth-sep::before, .auth-sep::after { content: ''; height: 1px; background: var(--line); flex: 1; }
-.demo-accounts { border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 14px 16px; background: var(--surface-2); }
-.demo-accounts h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 10px; }
-.demo-account { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.78rem; padding: 5px 0; }
-.demo-account code { font-size: 0.76rem; color: var(--ink-soft); background: #fff; padding: 3px 7px; border-radius: 6px; border: 1px solid var(--line); }
-.demo-account button { border: 0; background: none; color: var(--accent); font-weight: 600; font-size: 0.76rem; cursor: pointer; padding: 0; }
 .auth-alt { text-align: center; font-size: 0.88rem; color: var(--muted); margin-top: 24px; }
 .auth-alt a { color: var(--accent); font-weight: 600; }
 .auth-alt a:hover { text-decoration: underline; }

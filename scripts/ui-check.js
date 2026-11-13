@@ -84,10 +84,7 @@ const pages = [
     wait: 200,
     assert(dom) {
       const d = dom.window.document;
-      return [
-        ['login form present', Boolean(d.getElementById('loginForm'))],
-        ['demo account fillers present', d.querySelectorAll('[data-fill]').length === 3],
-      ];
+      return [['login form present', Boolean(d.getElementById('loginForm'))]];
     },
   },
   {

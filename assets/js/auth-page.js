@@ -15,15 +15,6 @@ function safeNext(fallback) {
 }
 
 if (loginForm) {
-  document.querySelectorAll('[data-fill]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const [email, password] = btn.dataset.fill.split('|');
-      loginForm.elements.email.value = email;
-      loginForm.elements.password.value = password;
-      loginForm.elements.password.focus();
-    });
-  });
-
   loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     clearFormErrors(loginForm);
